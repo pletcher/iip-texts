@@ -33,6 +33,8 @@ except Exception as e:
 # text of previous element, if extant, or adds it to the text of
 # the parent element.
 # From https://github.com/OaklandPeters/til/blob/master/til/python/lxml-and-tail-text.md
+# QUESTION: (charles) Why not just use the supported `method="text"` 
+# or with_tail=True? https://lxml.de/tutorial.html#elements-contain-text
 def remove_element(elem):
 	parent = elem.getparent()
 	if elem.tail:
