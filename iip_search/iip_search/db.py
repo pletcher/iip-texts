@@ -10,7 +10,7 @@ from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 
-from typing import List
+from typing import Set
 
 DB_URL = os.getenv("DB_URL", "postgresql+psycopg://postgres:postgres@localhost:5432/iip_search_dev")
 engine = create_engine(DB_URL)
@@ -25,7 +25,7 @@ class Inscription(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     filename: Mapped[str]
-    editions: Mapped[List["Edition"]] = relationship(back_populates="edition")
+    editions: Mapped[Set["Edition"]] = relationship(back_populates="inscription")
     parsed_at: Mapped[datetime.datetime]
 
 class EditionType(enum.Enum):
@@ -40,7 +40,7 @@ class Edition(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     edition_type: Mapped[EditionType]
     inscription_id = mapped_column(ForeignKey("inscriptions.id"))
-    inscription: Mapped["Inscription"] = relationship(back_populates="inscriptions")
+    inscription: Mapped["Inscription"] = relationship(back_populates="editions")
     # NOTE: (charles) Since we're using Postgres, we *could* use the built-in
     # XML type. But there's really no advantage in doing so unless
     # we plan to query against this column. As it stands now, this column
