@@ -1,14 +1,17 @@
 from lxml import etree
 from pathlib import Path
 
+import logging
 import os
 
-EPIDOC_DIR = Path("epidoc-files")
+EPIDOC_DIR = Path("../epidoc-files")
 NAMESPACES = {
     "tei": "http://www.tei-c.org/ns/1.0"
 }
 
-class EpidocParser():
+logging.basicConfig(format='%(levelname)s: %(asctime)s %(message)s', level=logging.INFO)
+
+class EpidocParser:
     transcription_xpath = "//tei:text/tei:body/tei:div[@type = 'edition' and @subtype = 'transcription']/tei:p/*"
     transcription_segmented_xpath = "//tei:text/tei:body/tei:div[@type = 'edition' and @subtype = 'transcription_segmented']/tei:p/*"
     translation_xpath = "//tei:text/tei:body/tei:div[@type = 'edition' and @subtype = 'translation']/tei:p/*"
@@ -17,10 +20,14 @@ class EpidocParser():
         self._dir = dir
 
     def list_directory_contents(self):
-        return os.listdir(self._dir)
+        return [f for f in os.listdir(self._dir) if f[-4:] == ".xml"]
 
-    def get_text_elements(self, filename, xpath = self.transcription_xpath):
-        root = etree.parse(Path(self._dir / filename)).getroot()
+    def get_text_elements(self, filename, xpath = transcription_xpath):
+        file = Path(self._dir / filename)
+
+        logging.info(f"Attempting to parse {file}.")
+
+        root = etree.parse(file).getroot()
         xml = root.xpath(xpath, namespaces=NAMESPACES)
         
         return [(el, etree.tostring(el, encoding="unicode", method="text").strip()) for el in xml]
