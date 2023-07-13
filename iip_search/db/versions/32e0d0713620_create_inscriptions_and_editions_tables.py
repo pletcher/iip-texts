@@ -1,16 +1,22 @@
 """Create inscriptions and editions tables
 
-Revision ID: 2b8d6c9669c2
+Revision ID: 32e0d0713620
 Revises: 
-Create Date: 2023-07-09 23:49:33.365898
+Create Date: 2023-07-13 16:21:56.679319
 
 """
 from alembic import op
 import sqlalchemy as sa
 
+from sqlalchemy.dialects.postgresql import TSVECTOR
+from sqlalchemy.types import TypeDecorator
+
+class TSVector(TypeDecorator):
+    impl = TSVECTOR
+
 
 # revision identifiers, used by Alembic.
-revision = '2b8d6c9669c2'
+revision = '32e0d0713620'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -30,6 +36,12 @@ def upgrade() -> None:
     sa.Column('inscription_id', sa.Integer(), nullable=True),
     sa.Column('raw_xml', sa.String(), nullable=False),
     sa.Column('text', sa.String(), nullable=False),
+    sa.Column('searchable_text', TSVector(), sa.Computed(
+        """
+        to_tsvector('english', regexp_replace(normalize(text, NFKD), '[\u0300-\u036f]', '', 'g'))
+        """,
+        persisted=True
+    )),
     sa.ForeignKeyConstraint(['inscription_id'], ['inscriptions.id'], ),
     sa.PrimaryKeyConstraint('id')
     )

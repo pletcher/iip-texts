@@ -22,7 +22,7 @@ class EpidocParser:
     def list_directory_contents(self):
         return [f for f in os.listdir(self._dir) if f[-4:] == ".xml"]
 
-    def get_edition(self, tree, xpath = transcription_xpath):
+    def get_edition(self, tree, xpath):
         editions = tree.xpath(xpath, namespaces=NAMESPACES)
 
         if len(editions) > 1:
@@ -33,10 +33,8 @@ class EpidocParser:
 
         return editions[0]
 
-    def get_text_elements(self, tree, xpath = transcription_xpath):
-        xml = tree.xpath(f'{xpath}/tei:p/*', namespaces=NAMESPACES)
-        
-        return xml
+    def get_text_elements(self, tree, xpath):
+        return tree.xpath(f'{xpath}/tei:p/*', namespaces=NAMESPACES)
     
     def get_transcription(self, filename):
         return self._stringify_xml_and_text(filename, self.transcription_xpath)

@@ -3,12 +3,17 @@ import enum
 import os
 
 from sqlalchemy import create_engine
+from sqlalchemy import Column, Computed
 from sqlalchemy import ForeignKey
+
+from sqlalchemy.dialects.postgresql import TSVECTOR
 
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
+
+from sqlalchemy.types import TypeDecorator
 
 from typing import Set
 
@@ -16,6 +21,9 @@ DB_URL = os.getenv("DB_URL", "postgresql+psycopg://postgres:postgres@localhost:5
 engine = create_engine(DB_URL)
 
 # Models
+
+class TSVector(TypeDecorator):
+    impl = TSVECTOR
 
 class Base(DeclarativeBase):
     pass
@@ -48,3 +56,9 @@ class Edition(Base):
     # looks correct.
     raw_xml: Mapped[str]
     text: Mapped[str]
+    searchable_text: Mapped[TSVector] = Computed(
+        """
+        to_tsvector('english', regexp_replace(normalize(text, NFKD), '[\u0300-\u036f]', '', 'g'))
+        """, 
+        persisted=True
+    )
