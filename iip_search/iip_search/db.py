@@ -2,6 +2,10 @@ import datetime
 import enum
 import os
 
+from dataclasses import dataclass
+
+from flask_sqlalchemy import SQLAlchemy
+
 from sqlalchemy import create_engine
 from sqlalchemy import Column, Computed
 from sqlalchemy import ForeignKey
@@ -12,6 +16,7 @@ from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
+from sqlalchemy.orm import scoped_session, sessionmaker
 
 from sqlalchemy.types import TypeDecorator
 
@@ -19,16 +24,19 @@ from typing import Set
 
 DB_URL = os.getenv("DB_URL", "postgresql+psycopg://postgres:postgres@localhost:5432/iip_search_dev")
 engine = create_engine(DB_URL)
+db_session = scoped_session(sessionmaker(autocommit=False,
+                                         autoflush=False,
+                                         bind=engine))
+
+db = SQLAlchemy()
 
 # Models
 
 class TSVector(TypeDecorator):
     impl = TSVECTOR
 
-class Base(DeclarativeBase):
-    pass
-
-class Inscription(Base):
+@dataclass
+class Inscription(db.Model):
     __tablename__ = "inscriptions"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -42,7 +50,7 @@ class EditionType(enum.Enum):
     TRANSCRIPTION_SEGMENTED = "transcription_segmented"
     TRANSLATION = "translation"
 
-class Edition(Base):
+class Edition(db.Model):
     __tablename__ = "editions"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -56,9 +64,9 @@ class Edition(Base):
     # looks correct.
     raw_xml: Mapped[str]
     text: Mapped[str]
-    searchable_text: Mapped[TSVector] = Computed(
+    searchable_text: Mapped[TSVector] = db.Column(Computed(
         """
         to_tsvector('english', regexp_replace(normalize(text, NFKD), '[\u0300-\u036f]', '', 'g'))
         """, 
         persisted=True
-    )
+    ))
