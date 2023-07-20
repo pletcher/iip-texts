@@ -8,3 +8,5 @@ IIP-texts.xpr
 venv
 .envrc
 *.egg-info
+.ipynb_checkpoints
+.virtual_documents

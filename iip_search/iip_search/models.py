@@ -130,12 +130,55 @@ iip_religion_inscription = Table(
     Column("inscription_id", ForeignKey("inscriptions.id"), primary_key=True),
 )
 
+inscription_bibliographic_entry = Table(
+    "inscription_bibliographic_entry",
+    Base.metadata,
+    Column("inscription_id", ForeignKey("inscriptions.id"), primary_key=True),
+    Column(
+        "bibliographic_entry_id",
+        ForeignKey("bibliographic_entries.id"),
+        primary_key=True,
+    ),
+)
+
 language_inscription = Table(
     "language_inscription",
     Base.metadata,
     Column("language_id", ForeignKey("languages.id"), primary_key=True),
     Column("inscription_id", ForeignKey("inscriptions.id"), primary_key=True),
 )
+
+"""
+Example bibliography:
+<div type="bibliography">
+    <listBibl>
+        <bibl xml:id="b1">
+            <ptr type="biblItem" target="IIP-475.xml"/>
+            <biblScope unit="page">52</biblScope>
+        </bibl>
+        <bibl xml:id="b2">
+            <ptr type="biblItem" target="IIP-053.xml"/>
+            <biblScope unit="page">57</biblScope>
+        </bibl>
+    </listBibl>
+</div>
+"""
+
+
+class BibliographicEntry(Base):
+    __tablename__ = "bibliographic_entries"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    bibl_scope: Mapped[str]
+    bibl_scope_unit: Mapped[str]
+    inscriptions: Mapped[Set["Inscription"]] = relationship(
+        secondary=inscription_bibliographic_entry,
+        back_populates="bibliographic_entries",
+    )
+    ptr_target: Mapped[str]
+    ptr_type: Mapped[str]
+    raw_xml: Mapped[str] = mapped_column(nullable=False)
+    xml_id: Mapped[str] = mapped_column(nullable=False)
 
 
 class IIPGenre(Base):
@@ -155,7 +198,7 @@ class IIPMaterial(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     description: Mapped[str]
     inscriptions: Mapped[Set["Inscription"]] = relationship(
-        secondary=iip_material_inscription, back_populates="iip_material"
+        secondary=iip_material_inscription, back_populates="iip_materials"
     )
     xml_id: Mapped[str] = mapped_column(nullable=False, unique=True)
 
@@ -166,7 +209,7 @@ class IIPReligion(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     description: Mapped[str]
     inscriptions: Mapped[Set["Inscription"]] = relationship(
-        secondary=iip_religion_inscription, back_populates="religion"
+        secondary=iip_religion_inscription, back_populates="iip_religions"
     )
     xml_id: Mapped[str] = mapped_column(nullable=False, unique=True)
 
@@ -177,7 +220,7 @@ class IIPWriting(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     description: Mapped[str]
     inscriptions: Mapped[Set["Inscription"]] = relationship(
-        secondary=iip_writing_inscription, back_populates="iip_writing"
+        secondary=iip_writing_inscription, back_populates="iip_writings"
     )
     xml_id: Mapped[str] = mapped_column(nullable=False, unique=True)
 
@@ -186,7 +229,9 @@ class Language(Base):
     __tablename__ = "languages"
     __table_args__ = (UniqueConstraint("label", name="language_label"),)
     id: Mapped[int] = mapped_column(primary_key=True)
-    inscriptions: Mapped[Set["Inscription"]] = relationship(back_populates="language")
+    inscriptions: Mapped[Set["Inscription"]] = relationship(
+        secondary=language_inscription, back_populates="languages"
+    )
     label: Mapped[str] = mapped_column(nullable=False, unique=True)
     short_form: Mapped[str] = mapped_column(nullable=False, unique=True)
 
@@ -202,6 +247,9 @@ class Inscription(Base):
     __tablename__ = "inscriptions"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    bibliographic_entries: Mapped[Set[BibliographicEntry]] = relationship(
+        secondary=inscription_bibliographic_entry, back_populates="inscriptions"
+    )
     city_id = mapped_column(ForeignKey("cities.id"))
     city: Mapped[City] = relationship(back_populates="inscriptions")
     description: Mapped[str]
@@ -230,7 +278,7 @@ class Inscription(Base):
         secondary=iip_writing_inscription, back_populates="inscriptions"
     )
     images: Mapped[Set["Image"]] = relationship(back_populates="inscription")
-    language: Mapped[Set[Language]] = relationship(
+    languages: Mapped[Set[Language]] = relationship(
         secondary=language_inscription, back_populates="inscriptions"
     )
     not_after: Mapped[str]
@@ -266,50 +314,6 @@ class Image(Base):
     source: Mapped[str]
 
 
-edition_bibliographic_entry = Table(
-    "edition_bibliographic_entry",
-    Base.metadata,
-    Column("edition_id", ForeignKey("editions.id"), primary_key=True),
-    Column(
-        "bibliographic_entry_id",
-        ForeignKey("bibliographic_entries.id"),
-        primary_key=True,
-    ),
-)
-
-
-"""
-Example bibliography:
-<div type="bibliography">
-    <listBibl>
-        <bibl xml:id="b1">
-            <ptr type="biblItem" target="IIP-475.xml"/>
-            <biblScope unit="page">52</biblScope>
-        </bibl>
-        <bibl xml:id="b2">
-            <ptr type="biblItem" target="IIP-053.xml"/>
-            <biblScope unit="page">57</biblScope>
-        </bibl>
-    </listBibl>
-</div>
-"""
-
-
-class BibliographicEntry(Base):
-    __tablename__ = "bibliographic_entries"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    bibl_scope: Mapped[str]
-    bibl_scope_unit: Mapped[str]
-    editions: Mapped[Set["Edition"]] = relationship(
-        secondary=edition_bibliographic_entry, back_populates="bibliographic_entries"
-    )
-    ptr_target: Mapped[str]
-    ptr_type: Mapped[str]
-    raw_xml: Mapped[str] = mapped_column(nullable=False)
-    xml_id: Mapped[str] = mapped_column(nullable=False)
-
-
 class EditionType(enum.Enum):
     DIPLOMATIC = "diplomatic"
     TRANSCRIPTION = "transcription"
@@ -321,9 +325,6 @@ class Edition(Base):
     __tablename__ = "editions"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    bibliographic_entries: Mapped[Set[BibliographicEntry]] = relationship(
-        secondary=edition_bibliographic_entry, back_populates="editions"
-    )
     edition_type: Mapped[EditionType]
     inscription_id = mapped_column(ForeignKey("inscriptions.id"))
     inscription: Mapped["Inscription"] = relationship(back_populates="editions")
