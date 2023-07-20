@@ -5,7 +5,7 @@ from flask import request
 
 from sqlalchemy import select
 
-from .db import Inscription, Edition, db, db_session
+from .db import init_db, db_session
 
 import os
 
@@ -14,14 +14,14 @@ app = Flask(__name__)
 app.config["JSON_AS_ASCII"] = False
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DB_URL")
 
-db.init_app(app)
-
 with app.app_context():
-    db.create_all()
+    init_db()
+
 
 @app.route("/heartbeat")
 def heartbeat():
     return "OK"
+
 
 # Search fields from https://github.com/Brown-University-Library/iip-production/blob/main/iip_smr_web_app/common.py#L146C74-L146C136
 # `(
@@ -37,20 +37,22 @@ def heartbeat():
 #   'religion',
 #   'material',
 #   'notBefore',
-#   'notAfter', 
+#   'notAfter',
 #   'display_status'
 # )`
 
+
 @app.route("/")
 def search():
-    search_string = request.args.get('search', '')
+    search_string = request.args.get("search", "")
     stmt = select(Edition).where(Edition.searchable_text.match(search_string))
     results = [
-        {'inscription': r.inscription.filename, 'text': r.text} 
+        {"inscription": r.inscription.filename, "text": r.text}
         for r in db_session.execute(stmt).scalars()
     ]
 
-    return {'results': results, 'search': search_string}
+    return {"results": results, "search": search_string}
+
 
 @app.teardown_appcontext
 def shutdown_session(exception=None):
