@@ -1,5 +1,6 @@
+# -*- coding: utf-8 -*-
+
 from flask import Flask
-from flask import jsonify
 from flask import request
 
 from sqlalchemy import select
@@ -10,6 +11,7 @@ import os
 
 app = Flask(__name__)
 
+app.config["JSON_AS_ASCII"] = False
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DB_URL")
 
 db.init_app(app)
