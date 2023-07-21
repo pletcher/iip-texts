@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 
 from lxml import etree
 from pathlib import Path
@@ -7,15 +8,25 @@ from pathlib import Path
 from iip_search import models
 
 EPIDOC_DIR = Path("../epidoc-files")
-NAMESPACES = {"tei": "http://www.tei-c.org/ns/1.0"}
+NAMESPACES = {
+    "tei": "http://www.tei-c.org/ns/1.0",
+    "xml": "http://www.w3.org/XML/1998/namespace",
+}
+TAXONOMY_FILE = Path("../include_taxonomies.xml")
 XML_ID_ATTRIB = "{http://www.w3.org/XML/1998/namespace}id"
 
 logging.basicConfig(format="%(levelname)s: %(asctime)s %(message)s", level=logging.INFO)
+
+whitespace_regex = re.compile(r"\s+")
 
 
 class EpidocParser:
     bibliography_xpath = (
         "//tei:text/tei:back/tei:div[@type = 'bibliography']/tei:listBibl/tei:bibl"
+    )
+    dimensions_xpath = "//tei:dimensions"
+    iip_form_description_xpath = (
+        "//tei:sourceDesc/tei:msDesc/tei:physDesc/tei:objectDesc"
     )
     transcription_xpath = (
         "//tei:text/tei:body/tei:div[@type = 'edition' and @subtype = 'transcription']"
@@ -25,6 +36,7 @@ class EpidocParser:
 
     def __init__(self, filename):
         self.filename = filename
+        self.taxonomies = self._get_taxonomies()
         self.tree = self._parse_file()
 
     def list_directory_contents(self):
@@ -59,25 +71,64 @@ class EpidocParser:
         pass
 
     def get_description(self):
-        pass
+        commentary = self.tree.xpath(
+            "//tei:div[@type = 'commentary']/tei:p/text()", namespaces=NAMESPACES
+        )[0]
+
+        return whitespace_regex.sub(" ", commentary)
 
     def get_dimensions(self):
-        pass
+        dimensions = []
+        for dimension_entry in self.tree.iterfind(
+            self.dimensions_xpath, namespaces=NAMESPACES
+        ):
+            attributes = dict(dimension_entry.attrib)
+
+            depth = dimension_entry.xpath("./tei:depth/text()", namespaces=NAMESPACES)
+            height = dimension_entry.xpath("./tei:height/text()", namespaces=NAMESPACES)
+            width = dimension_entry.xpath("./tei:width/text()", namespaces=NAMESPACES)
+
+            depth = depth[0] if len(depth) > 0 else None
+            height = height[0] if len(height) > 0 else None
+            width = width[0] if len(width) > 0 else None
+            entry = {"depth": depth, "height": height, "width": width}
+            entry.update(attributes)
+            dimensions.append(entry)
+
+        return dimensions
 
     def get_iip_form(self):
-        pass
+        object_description = self.tree.find(
+            self.iip_form_description_xpath, namespaces=NAMESPACES
+        )
+
+        return [
+            models.IIPForm(xml_id=form)
+            for form in object_description.get("ana").replace("#", "").split(" ")
+        ]
 
     def get_iip_genres(self):
-        pass
+        ms_item = self.tree.find("//tei:msItem", namespaces=NAMESPACES)
+
+        return [
+            models.IIPGenre(xml_id=genre)
+            for genre in ms_item.get("class").replace("#", "").split(" ")
+        ]
 
     def get_iip_materials(self):
         pass
 
     def get_iip_preservation(self):
-        pass
+        preservation = self.tree.find("//tei:condition")
+        return models.IIPPreservation(xml_id=preservation)
 
     def get_iip_religions(self):
-        pass
+        ms_item = self.tree.find("//tei:msItem", namespaces=NAMESPACES)
+
+        return [
+            models.IIPReligion(xml_id=religion)
+            for religion in ms_item.get("ana").replace("#", "").split(" ")
+        ]
 
     def get_iip_writings(self):
         pass
@@ -134,6 +185,41 @@ class EpidocParser:
 
     def get_translation(self):
         return self._stringify_xml_and_text(self.filename, self.translation_xpath)
+
+    def _get_taxonomies(self):
+        tree = etree.parse(TAXONOMY_FILE)
+
+        forms = self._get_taxonomy(tree, "form")
+        genres = self._get_taxonomy(tree, "genre")
+        materials = self._get_taxonomy(tree, "materials")
+        preservations = self._get_taxonomy(tree, "preservation")
+        religions = self._get_taxonomy(tree, "religion")
+        writings = self._get_taxonomy(tree, "writing")
+
+        return {
+            "forms": forms,
+            "genres": genres,
+            "materials": materials,
+            "preservations": preservations,
+            "religions": religions,
+            "writings": writings,
+        }
+
+    def _get_taxonomy(self, tree, taxonomy_name):
+        logging.info(f"Getting {taxonomy_name} taxonomy...")
+        taxonomy = {}
+        for item in tree.find(
+            f"//tei:taxonomy[@xml:id = 'IIP-{taxonomy_name}']", namespaces=NAMESPACES
+        ):
+            xml_id = item.get(XML_ID_ATTRIB)
+            taxonomy[xml_id] = {}
+            taxonomy[xml_id]["ana"] = item.get("ana")
+            description = item.find("./tei:catDesc", namespaces=NAMESPACES)
+
+            if description is not None:
+                taxonomy[xml_id]["description"] = description.text
+
+        return taxonomy
 
     def _parse_file(self):
         logging.info(f"Attempting to parse {self.filename}.")
