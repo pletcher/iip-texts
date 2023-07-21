@@ -14,10 +14,48 @@ NAMESPACES = {
 }
 TAXONOMY_FILE = Path("../include_taxonomies.xml")
 XML_ID_ATTRIB = "{http://www.w3.org/XML/1998/namespace}id"
+XML_LANG_ATTRIB = "{http://www.w3.org/XML/1998/namespace}lang"
 
 logging.basicConfig(format="%(levelname)s: %(asctime)s %(message)s", level=logging.INFO)
 
 whitespace_regex = re.compile(r"\s+")
+
+LANGUAGES = {
+    "arc": {
+        "label": "Aramaic",
+    },
+    "geo": {
+        "label": "Georgian",
+    },
+    "grc": {
+        "label": "Greek",
+    },
+    "he": {
+        "label": "Hebrew",
+        "short_form": "heb",
+    },
+    "heb": {
+        "label": "Hebrew",
+    },
+    "la": {
+        "label": "Latin",
+        "short_form": "lat",
+    },
+    "lat": {"label": "Latin"},
+    "Other": {
+        "label": "Other",
+    },
+    "phn": {
+        "label": "Phoenician",
+    },
+    "syc": {
+        "label": "Syriac",
+    },
+    "x-unknown": {
+        "label": "Unknown",
+    },
+    "xcl": {"label": "Armenian"},
+}
 
 
 class EpidocParser:
@@ -68,7 +106,13 @@ class EpidocParser:
         return entries
 
     def get_city(self):
-        pass
+        settlement = self.tree.find(
+            "//tei:placeName/tei:settlement", namespaces=NAMESPACES
+        )
+
+        return models.City(
+            placename=settlement.text, pleaides_ref=settlement.get("ref")
+        )
 
     def get_description(self):
         commentary = self.tree.xpath(
@@ -168,28 +212,96 @@ class EpidocParser:
         ]
 
     def get_images(self):
-        pass
+        images = []
+
+        main_image = self.tree.find(
+            "//tei:facsimile/tei:graphic", namespaces=NAMESPACES
+        )
+
+        if main_image is not None:
+            images.append(models.Image(graphic_url=main_image.get("url")))
+
+        for image in self.tree.iterfind(
+            "//tei:facsimile/tei:surface", namespaces=NAMESPACES
+        ):
+            desc_tag = image.find("./tei:desc", namespaces=NAMESPACES)
+            graphic_tag = image.find("./tei:graphic", namespaces=NAMESPACES)
+            graphic_url = graphic_tag.get("url", "")
+
+            if len(graphic_url) > 0:
+                images.append(
+                    models.Image(description=desc_tag.text, graphic_url=graphic_url)
+                )
+
+        return images
 
     def get_languages(self):
-        pass
+        lang_codes = set()
+        for tag in self.tree.iterfind(
+            f"//*[@{XML_LANG_ATTRIB}]", namespaces=NAMESPACES
+        ):
+            lang = tag.get(XML_LANG_ATTRIB)
+            short_form = LANGUAGES.get(lang).get("short_form", lang)
+
+            lang_codes.add(short_form)
+
+        languages = []
+        for short_form in list(lang_codes):
+            label = LANGUAGES.get(short_form).get("label")
+
+            # TODO: This check is most likely unnecessary, but it's worth
+            # keeping an eye on.
+            if label is not None:
+                languages.append(models.Language(label=label, short_form=short_form))
+            else:
+                logging.warn(
+                    f"No language label found for short (ISO 639-3) form {short_form}."
+                )
+
+        return languages
 
     def get_not_before(self):
-        pass
+        date = self.tree.find("//tei:origin/tei:date", namespaces=NAMESPACES)
+
+        return date.get("notBefore")
 
     def get_not_after(self):
-        pass
+        date = self.tree.find("//tei:origin/tei:date", namespaces=NAMESPACES)
+
+        return date.get("notAfter")
 
     def get_provenance(self):
-        pass
+        provance_tag = self.tree.find(
+            "//tei:history/tei:provenance", namespaces=NAMESPACES
+        )
+
+        if provenance_tag is not None:
+            placename = provenance_tag.find("./tei:placeName", namespaces=NAMESPACES)
+
+            if placename is not None:
+                return models.Provenance(placename=placename.text)
+
+        return None
 
     def get_region(self):
-        pass
+        region_tag = self.tree.find(
+            "//tei:history/tei:origin/tei:region", namespaces=NAMESPACES
+        )
+
+        if region_tag is not None:
+            return models.Region(label=region_tag.text)
+
+        return None
 
     def get_short_description(self):
         pass
 
     def get_title(self):
-        pass
+        ms_item_text = self.tree.xpath(
+            "//tei:msDesc/tei:msContents/tei:msItem/*/text()", namespaces=NAMESPACES
+        )
+
+        return ms_item_text[0].strip()
 
     # ------- End Inscription fields and relations ------- #
 

@@ -91,7 +91,8 @@ class City(Base):
     __table_args__ = (UniqueConstraint("placename", name="city_placename"),)
     id: Mapped[int] = mapped_column(primary_key=True)
     inscriptions: Mapped[Set["Inscription"]] = relationship(back_populates="city")
-    placename: Mapped[str]
+    placename: Mapped[str] = mapped_column(nullable=False)
+    pleiades_ref: Mapped[str]
 
 
 class Region(Base):
@@ -310,10 +311,9 @@ class Image(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     description: Mapped[str]
-    graphic_url: Mapped[str]
+    graphic_url: Mapped[str] = mapped_column(nullable=False)
     inscription_id = mapped_column(ForeignKey("inscriptions.id"))
     inscription: Mapped[Inscription] = relationship(back_populates="images")
-    source: Mapped[str]
 
 
 class EditionType(enum.Enum):
