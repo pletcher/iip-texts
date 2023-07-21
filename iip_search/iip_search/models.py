@@ -61,6 +61,7 @@ class IIPForm(Base):
     __tablename__ = "iip_forms"
     __table_args__ = (UniqueConstraint("xml_id", name="iip_form_xml_id"),)
     id: Mapped[int] = mapped_column(primary_key=True)
+    ana: Mapped[str]
     description: Mapped[str]
     inscriptions: Mapped[Set["Inscription"]] = relationship(back_populates="iip_form")
     xml_id: Mapped[str] = mapped_column(nullable=False, unique=True)
@@ -222,6 +223,7 @@ class IIPWriting(Base):
     inscriptions: Mapped[Set["Inscription"]] = relationship(
         secondary=iip_writing_inscription, back_populates="iip_writings"
     )
+    note: Mapped[str]
     xml_id: Mapped[str] = mapped_column(nullable=False, unique=True)
 
 

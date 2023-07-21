@@ -102,36 +102,70 @@ class EpidocParser:
             self.iip_form_description_xpath, namespaces=NAMESPACES
         )
 
-        return [
-            models.IIPForm(xml_id=form)
-            for form in object_description.get("ana").replace("#", "").split(" ")
-        ]
+        forms = []
+        for form in object_description.get("ana").replace("#", "").split(" "):
+            ana = self.taxonomies[form]["ana"]
+            description = self.taxonomies[form]["description"]
+
+            forms.append(models.IIPForm(xml_id=form, ana=ana, description=description))
+
+        return forms
 
     def get_iip_genres(self):
         ms_item = self.tree.find("//tei:msItem", namespaces=NAMESPACES)
 
         return [
-            models.IIPGenre(xml_id=genre)
+            models.IIPGenre(
+                xml_id=genre, description=self.taxonomies[genre].get("description")
+            )
             for genre in ms_item.get("class").replace("#", "").split(" ")
         ]
 
     def get_iip_materials(self):
-        pass
+        support_desc = self.tree.find("//tei:supportDesc", namespaces=NAMESPACES)
+
+        return [
+            models.IIPMaterial(
+                xml_id=materials,
+                description=self.taxonomies[materials].get("description"),
+            )
+            for materials in support_desc.get("ana").replace("#", "").split(" ")
+        ]
 
     def get_iip_preservation(self):
-        preservation = self.tree.find("//tei:condition")
-        return models.IIPPreservation(xml_id=preservation)
+        preservation = self.tree.find("//tei:condition", namespaces=NAMESPACES)
+
+        return models.IIPPreservation(
+            xml_id=preservation,
+            description=self.taxonomies[preservation]["description"],
+        )
 
     def get_iip_religions(self):
         ms_item = self.tree.find("//tei:msItem", namespaces=NAMESPACES)
 
         return [
-            models.IIPReligion(xml_id=religion)
+            models.IIPReligion(
+                xml_id=religion,
+                description=self.taxonomies[religion].get("description"),
+            )
             for religion in ms_item.get("ana").replace("#", "").split(" ")
         ]
 
     def get_iip_writings(self):
-        pass
+        hand_note = self.tree.find("//tei:handNote", namespaces=NAMESPACES)
+        ana = hand_note.get("ana").replace("#", "")
+        note = hand_note.find("./tei:p", namespaces=NAMESPACES)
+
+        if note is not None:
+            note = note.text
+
+        return [
+            models.IIPWriting(
+                xml_id=ana,
+                note=note,
+                description=self.taxonomies[ana].get("description"),
+            )
+        ]
 
     def get_images(self):
         pass
@@ -213,11 +247,15 @@ class EpidocParser:
         ):
             xml_id = item.get(XML_ID_ATTRIB)
             taxonomy[xml_id] = {}
-            taxonomy[xml_id]["ana"] = item.get("ana")
-            description = item.find("./tei:catDesc", namespaces=NAMESPACES)
 
-            if description is not None:
-                taxonomy[xml_id]["description"] = description.text
+            # only forms appear to have an @ana attribute
+            if taxonomy_name == "form":
+                taxonomy[xml_id]["ana"] = item.get("ana")
+
+            description = item.find("./tei:catDesc", namespaces=NAMESPACES)
+            taxonomy[xml_id]["description"] = (
+                description.text if description is not None else description
+            )
 
         return taxonomy
 
