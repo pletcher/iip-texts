@@ -1,11 +1,8 @@
 import logging
-import os
 import re
 
 from lxml import etree
 from pathlib import Path
-
-from iip_search import models
 
 EPIDOC_DIR = Path("../epidoc-files")
 NAMESPACES = {
@@ -24,16 +21,20 @@ LANGUAGES = {
     "arc": {
         "label": "Aramaic",
     },
+    "arc-grc": {
+        "label": "Aramaic transliterated in Greek",
+    },
+    # See beth0023.xml for arc-Grek example
+    "arc-Grek": {"label": "Aramaic transliterated in Greek", "short_form": "arc-grc"},
+    "egy": {"label": "Egyptian"},
     "geo": {
         "label": "Georgian",
     },
     "grc": {
         "label": "Greek",
     },
-    "he": {
-        "label": "Hebrew",
-        "short_form": "heb",
-    },
+    "hbo": {"label": "Hebrew", "short_form": "heb"},
+    "he": {"label": "Hebrew", "short_form": "heb"},
     "heb": {
         "label": "Hebrew",
     },
@@ -51,6 +52,12 @@ LANGUAGES = {
     "syc": {
         "label": "Syriac",
     },
+    # See beth0045.xml for x-greek-hebrew example
+    "x-greek-hebrew": {"label": "Hebrew transliterated in Greek"},
+    "x-Arabic": {"label": "Arabic"},
+    "x-Nabatean": {"label": "Nabatean"},
+    "x-Palmyran": {"label": "Palmyran"},
+    "x-Semitic": {"label": "Semitic"},
     "x-unknown": {
         "label": "Unknown",
     },
@@ -77,9 +84,6 @@ class EpidocParser:
         self.taxonomies = self._get_taxonomies()
         self.tree = self._parse_file()
 
-    def list_directory_contents(self):
-        return [f for f in os.listdir(self._dir) if f[-4:] == ".xml"]
-
     # ------- Begin Inscription fields and relations ------- #
 
     def get_bibliography(self):
@@ -94,7 +98,7 @@ class EpidocParser:
             ptr_type = ptr.attrib.get("type")
 
             entries.append(
-                models.BibliographicEntry(
+                dict(
                     xml_id=xml_id,
                     bibl_scope=bibl_scope_text,
                     bibl_scope_unit=bibl_scope_unit,
@@ -110,16 +114,17 @@ class EpidocParser:
             "//tei:placeName/tei:settlement", namespaces=NAMESPACES
         )
 
-        return models.City(
-            placename=settlement.text, pleaides_ref=settlement.get("ref")
-        )
+        return dict(placename=settlement.text, pleaides_ref=settlement.get("ref"))
 
     def get_description(self):
         commentary = self.tree.xpath(
             "//tei:div[@type = 'commentary']/tei:p/text()", namespaces=NAMESPACES
-        )[0]
+        )
 
-        return whitespace_regex.sub(" ", commentary)
+        if len(commentary) > 0:
+            return whitespace_regex.sub(" ", commentary[0])
+
+        return None
 
     def get_dimensions(self):
         dimensions = []
@@ -146,70 +151,127 @@ class EpidocParser:
             self.iip_form_description_xpath, namespaces=NAMESPACES
         )
 
-        forms = []
-        for form in object_description.get("ana").replace("#", "").split(" "):
-            ana = self.taxonomies[form]["ana"]
-            description = self.taxonomies[form]["description"]
+        ana = object_description.get("ana")
 
-            forms.append(models.IIPForm(xml_id=form, ana=ana, description=description))
+        if ana is not None:
+            forms = []
+            for form in ana.replace("#", "").split(" "):
+                taxonomy = self.taxonomies.get("forms")
+                # Some forms that appear in documents, like "handle in tjez0004",
+                # are not present in the taxonomy.
+                ana = taxonomy.get(form, {}).get("ana")
+                description = taxonomy.get(form, {}).get("description")
 
-        return forms
+                forms.append(dict(xml_id=form, ana=ana, description=description))
+
+            return forms
+
+        return None
 
     def get_iip_genres(self):
         ms_item = self.tree.find("//tei:msItem", namespaces=NAMESPACES)
+        ms_item_class = ms_item.get("class")
 
-        return [
-            models.IIPGenre(
-                xml_id=genre, description=self.taxonomies[genre].get("description")
-            )
-            for genre in ms_item.get("class").replace("#", "").split(" ")
-        ]
+        if ms_item_class is not None:
+            genres = []
+
+            for genre in ms_item_class.replace("#", "").split(" "):
+                # Some genres that appear in documents, like "commodity_chit",
+                # are not present in the taxonomy.
+                description = (
+                    self.taxonomies.get("genres").get(genre, {}).get("description")
+                )
+
+                genres.append(dict(xml_id=genre, description=description))
+
+            return genres
+
+        return None
 
     def get_iip_materials(self):
         support_desc = self.tree.find("//tei:supportDesc", namespaces=NAMESPACES)
+        ana = support_desc.get("ana")
 
-        return [
-            models.IIPMaterial(
-                xml_id=materials,
-                description=self.taxonomies[materials].get("description"),
-            )
-            for materials in support_desc.get("ana").replace("#", "").split(" ")
-        ]
+        materials = []
+        if ana is not None:
+            anas = ana.replace("#", "").split(" ")
+
+            for material in anas:
+                materials.append(
+                    dict(
+                        xml_id=material,
+                        description=self.taxonomies.get("materials")
+                        .get(material.lower(), {})
+                        .get("description", material),
+                    )
+                )
+        return materials
 
     def get_iip_preservation(self):
         preservation = self.tree.find("//tei:condition", namespaces=NAMESPACES)
+        ana = preservation.get("ana")
 
-        return models.IIPPreservation(
-            xml_id=preservation,
-            description=self.taxonomies[preservation]["description"],
-        )
+        if ana is not None:
+            ana = ana.replace("#", "")
+
+            return dict(
+                xml_id=ana,
+                description=self.taxonomies.get("preservations")
+                .get(ana, {})
+                .get("description", ana),
+            )
+
+        return None
 
     def get_iip_religions(self):
         ms_item = self.tree.find("//tei:msItem", namespaces=NAMESPACES)
+        ana = ms_item.get("ana")
 
-        return [
-            models.IIPReligion(
-                xml_id=religion,
-                description=self.taxonomies[religion].get("description"),
-            )
-            for religion in ms_item.get("ana").replace("#", "").split(" ")
-        ]
+        if ana is not None:
+            religions = []
+
+            for religion in ana.replace("#", "").split(" "):
+                # escape hatch for bad encoding in hamm0009.xml (and possibly elsewhere)
+                if religion == "unknown":
+                    religion = "unknown_religion"
+
+                religions.append(
+                    dict(
+                        xml_id=religion,
+                        description=self.taxonomies.get("religions")[religion].get(
+                            "description"
+                        ),
+                    )
+                )
+
+            return religions
+
+        return None
 
     def get_iip_writings(self):
         hand_note = self.tree.find("//tei:handNote", namespaces=NAMESPACES)
-        ana = hand_note.get("ana").replace("#", "")
-        note = hand_note.find("./tei:p", namespaces=NAMESPACES)
+        ana = hand_note.get("ana")
 
-        if note is not None:
-            note = note.text
+        if ana is not None:
+            ana = ana.replace("#", "")
+            note = hand_note.find("./tei:p", namespaces=NAMESPACES)
 
-        return [
-            models.IIPWriting(
-                xml_id=ana,
-                note=note,
-                description=self.taxonomies[ana].get("description"),
+            if note is not None:
+                note = note.text
+            # Some writings that appear in documents, like "engraved",
+            # are not present in the taxonomy.
+            description = (
+                self.taxonomies.get("writings").get(ana, {}).get("description")
             )
-        ]
+            return [
+                dict(
+                    xml_id=ana,
+                    note=note,
+                    description=description,
+                )
+            ]
+
+        return None
 
     def get_images(self):
         images = []
@@ -219,19 +281,26 @@ class EpidocParser:
         )
 
         if main_image is not None:
-            images.append(models.Image(graphic_url=main_image.get("url")))
+            images.append(dict(graphic_url=main_image.get("url")))
 
         for image in self.tree.iterfind(
             "//tei:facsimile/tei:surface", namespaces=NAMESPACES
         ):
             desc_tag = image.find("./tei:desc", namespaces=NAMESPACES)
             graphic_tag = image.find("./tei:graphic", namespaces=NAMESPACES)
-            graphic_url = graphic_tag.get("url", "")
 
-            if len(graphic_url) > 0:
-                images.append(
-                    models.Image(description=desc_tag.text, graphic_url=graphic_url)
-                )
+            if graphic_tag is not None:
+                graphic_url = graphic_tag.get("url", "")
+
+                description = None
+
+                if desc_tag is not None:
+                    description = desc_tag.text
+
+                if len(graphic_url) > 0:
+                    images.append(
+                        dict(description=description, graphic_url=graphic_url)
+                    )
 
         return images
 
@@ -240,7 +309,12 @@ class EpidocParser:
         for tag in self.tree.iterfind(
             f"//*[@{XML_LANG_ATTRIB}]", namespaces=NAMESPACES
         ):
-            lang = tag.get(XML_LANG_ATTRIB)
+            lang = tag.get(XML_LANG_ATTRIB).strip()
+            logging.info(f"Looking up short form for {lang}...")
+
+            if lang.strip() == "":
+                continue
+
             short_form = LANGUAGES.get(lang).get("short_form", lang)
 
             lang_codes.add(short_form)
@@ -252,7 +326,7 @@ class EpidocParser:
             # TODO: This check is most likely unnecessary, but it's worth
             # keeping an eye on.
             if label is not None:
-                languages.append(models.Language(label=label, short_form=short_form))
+                languages.append(dict(label=label, short_form=short_form))
             else:
                 logging.warn(
                     f"No language label found for short (ISO 639-3) form {short_form}."
@@ -263,15 +337,21 @@ class EpidocParser:
     def get_not_before(self):
         date = self.tree.find("//tei:origin/tei:date", namespaces=NAMESPACES)
 
-        return date.get("notBefore")
+        if date is not None:
+            return date.get("notBefore")
+
+        return None
 
     def get_not_after(self):
         date = self.tree.find("//tei:origin/tei:date", namespaces=NAMESPACES)
 
-        return date.get("notAfter")
+        if date is not None:
+            return date.get("notAfter")
+
+        return None
 
     def get_provenance(self):
-        provance_tag = self.tree.find(
+        provenance_tag = self.tree.find(
             "//tei:history/tei:provenance", namespaces=NAMESPACES
         )
 
@@ -279,7 +359,7 @@ class EpidocParser:
             placename = provenance_tag.find("./tei:placeName", namespaces=NAMESPACES)
 
             if placename is not None:
-                return models.Provenance(placename=placename.text)
+                return dict(placename=placename.text)
 
         return None
 
@@ -289,7 +369,7 @@ class EpidocParser:
         )
 
         if region_tag is not None:
-            return models.Region(label=region_tag.text)
+            return dict(label=region_tag.text)
 
         return None
 
@@ -301,7 +381,10 @@ class EpidocParser:
             "//tei:msDesc/tei:msContents/tei:msItem/*/text()", namespaces=NAMESPACES
         )
 
-        return ms_item_text[0].strip()
+        if len(ms_item_text) > 0:
+            return ms_item_text[0].strip()
+
+        return None
 
     # ------- End Inscription fields and relations ------- #
 
