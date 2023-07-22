@@ -83,7 +83,7 @@
                         </summary>
                         <origin><date notBefore="0586" notAfter="0586" period="http://n2t.net/ark:/99152/p0m63njjcn4">586 CE</date><placeName>
                                 <region>Coastal Plains</region>
-                                <settlement ref="http://pleiades.stoa.org/places/687902">Gaza</settlement>
+                                <settlement ref="https://pleiades.stoa.org/places/687902">Gaza</settlement>
                                 <geogName type="site">Abu Baraqeh Church </geogName>
                                 <geogFeat type="locus">Central nave of church </geogFeat>
                             </placeName>

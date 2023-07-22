@@ -32,6 +32,15 @@ class TSVector(TypeDecorator):
     impl = TSVECTOR
 
 
+class City(Base):
+    __tablename__ = "cities"
+    __table_args__ = (UniqueConstraint("placename", name="city_placename"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    inscriptions: Mapped[Set["Inscription"]] = relationship(back_populates="city")
+    placename: Mapped[str] = mapped_column(nullable=False)
+    pleiades_ref: Mapped[str] = mapped_column(nullable=True)
+
+
 """
 IIP{Form,Material,Genre,Preservation,Writing,Religion} should 
 be validated against those listed
@@ -57,16 +66,6 @@ for
 """
 
 
-class IIPForm(Base):
-    __tablename__ = "iip_forms"
-    __table_args__ = (UniqueConstraint("xml_id", name="iip_form_xml_id"),)
-    id: Mapped[int] = mapped_column(primary_key=True)
-    ana: Mapped[str]
-    description: Mapped[str]
-    inscriptions: Mapped[Set["Inscription"]] = relationship(back_populates="iip_form")
-    xml_id: Mapped[str] = mapped_column(nullable=False, unique=True)
-
-
 class IIPPreservation(Base):
     __tablename__ = "iip_preservations"
     __table_args__ = (UniqueConstraint("xml_id", name="iip_preservation_xml_id"),)
@@ -86,15 +85,6 @@ class Provenance(Base):
     placename: Mapped[str]
 
 
-class City(Base):
-    __tablename__ = "cities"
-    __table_args__ = (UniqueConstraint("placename", name="city_placename"),)
-    id: Mapped[int] = mapped_column(primary_key=True)
-    inscriptions: Mapped[Set["Inscription"]] = relationship(back_populates="city")
-    placename: Mapped[str] = mapped_column(nullable=False)
-    pleiades_ref: Mapped[str]
-
-
 class Region(Base):
     __tablename__ = "regions"
     __table_args__ = (UniqueConstraint("label", name="region_label"),)
@@ -103,6 +93,13 @@ class Region(Base):
     label: Mapped[str] = mapped_column(nullable=False, unique=True)
     description: Mapped[str] = mapped_column(nullable=False, unique=True)
 
+
+iip_form_inscription = Table(
+    "iip_form_inscription",
+    Base.metadata,
+    Column("iip_form_id", ForeignKey("iip_forms.id"), primary_key=True),
+    Column("inscription_id", ForeignKey("inscriptions.id"), primary_key=True),
+)
 
 iip_genre_inscription = Table(
     "iip_genre_inscription",
@@ -183,6 +180,18 @@ class BibliographicEntry(Base):
     xml_id: Mapped[str] = mapped_column(nullable=False)
 
 
+class IIPForm(Base):
+    __tablename__ = "iip_forms"
+    __table_args__ = (UniqueConstraint("xml_id", name="iip_form_xml_id"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    ana: Mapped[str] = mapped_column(nullable=True)
+    description: Mapped[str]
+    inscriptions: Mapped[Set["Inscription"]] = relationship(
+        back_populates="iip_forms", secondary=iip_form_inscription
+    )
+    xml_id: Mapped[str] = mapped_column(nullable=False, unique=True)
+
+
 class IIPGenre(Base):
     __tablename__ = "iip_genres"
     __table_args__ = (UniqueConstraint("xml_id", name="iip_genre_xml_id"),)
@@ -224,7 +233,7 @@ class IIPWriting(Base):
     inscriptions: Mapped[Set["Inscription"]] = relationship(
         secondary=iip_writing_inscription, back_populates="iip_writings"
     )
-    note: Mapped[str]
+    note: Mapped[str] = mapped_column(nullable=True)
     xml_id: Mapped[str] = mapped_column(nullable=False, unique=True)
 
 
@@ -262,8 +271,9 @@ class Inscription(Base):
     )
     editions: Mapped[Set["Edition"]] = relationship(back_populates="inscription")
     filename: Mapped[str] = mapped_column(nullable=False, unique=True)
-    iip_form_id = mapped_column(ForeignKey("iip_forms.id"))
-    iip_form: Mapped[IIPForm] = relationship(back_populates="inscriptions")
+    iip_forms: Mapped[IIPForm] = relationship(
+        secondary=iip_form_inscription, back_populates="inscriptions"
+    )
     iip_genres: Mapped[Set[IIPGenre]] = relationship(
         secondary=iip_genre_inscription, back_populates="inscriptions"
     )

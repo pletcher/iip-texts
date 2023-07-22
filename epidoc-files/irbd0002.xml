@@ -75,7 +75,7 @@
                         </summary>
                         <origin><date notBefore="0324" notAfter="0638" period="http://n2t.net/ark:/99152/p0m63njjcn4">324-638 CE</date><placeName>
                                 <region>Jordan </region>
-                                <settlement ref="http://pleiades.stoa.org/places/678028">Irbid</settlement>
+                                <settlement ref="https://pleiades.stoa.org/places/678028">Irbid</settlement>
                                 <geogName type="site">Khirbat Daraiyya </geogName>
                                 <geogFeat type="locus">Khirbat Daraiyya Church </geogFeat>
                             </placeName>

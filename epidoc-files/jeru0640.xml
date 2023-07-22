@@ -79,7 +79,7 @@
                         <origin><date notBefore="0601" notAfter="0700"
                                 period="http://n2t.net/ark:/99152/p0m63njjcn4">7th Century </date><placeName>
                                 <region>Judaea</region>
-                                <settlement ref="http://pleiades.stoa.org/places/687928"
+                                <settlement ref="https://pleiades.stoa.org/places/687928"
                                     >Jerusalem</settlement>
                                 <geogName type="site">Church of the Armenian monastery in
                                     Musara</geogName>

@@ -79,7 +79,7 @@
                         </summary>
                         <origin><date notBefore="0501" notAfter="0550" period="http://n2t.net/ark:/99152/p0m63njjcn4">Early 6th Century </date><placeName>
                                 <region>Judaea </region>
-                                <settlement ref="http://pleiades.stoa.org/places/687915">Hebron
+                                <settlement ref="https://pleiades.stoa.org/places/687915">Hebron
                                     Hills </settlement>
                                 <geogName type="site">Anab el-Kabir (Khierbet Anab)</geogName>
                                 <geogFeat type="locus">In the border of the nave mosiac carpet in

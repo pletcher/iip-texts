@@ -77,7 +77,7 @@
                         <origin><date notBefore="0554" notAfter="0555"
                                 period="http://n2t.net/ark:/99152/p0m63njjcn4">554/555 CE</date><placeName>
                                 <region>Negev</region>
-                                <settlement ref="http://pleiades.stoa.org/places/687846"
+                                <settlement ref="https://pleiades.stoa.org/places/687846"
                                     >Beersheba</settlement>
                                 <geogName type="site">Horvat Karkur 'Illit</geogName>
                                 <geogFeat type="locus">Dumpsite near church</geogFeat>

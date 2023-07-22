@@ -77,7 +77,7 @@
                         <origin><date notBefore="0324" notAfter="0638"
                                 period="http://n2t.net/ark:/99152/p0m63njjcn4">Byzantine </date><placeName>
                                 <region>Judaea </region>
-                                <settlement ref="http://pleiades.stoa.org/places/687923">Khirbat
+                                <settlement ref="https://pleiades.stoa.org/places/687923">Khirbat
                                     el-Mird</settlement>
                                 <geogName type="site">In the oval burial cave southwest of
                                     summit</geogName>

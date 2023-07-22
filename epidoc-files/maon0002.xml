@@ -77,7 +77,7 @@
                         <origin><date notBefore="0324" notAfter="0638"
                                 period="http://n2t.net/ark:/99152/p0m63njjcn4">Byzantine</date><placeName>
                                 <region>Negev</region>
-                                <settlement ref="http://pleiades.stoa.org/places/687964">Horvat
+                                <settlement ref="https://pleiades.stoa.org/places/687964">Horvat
                                     Ma'on</settlement>
                                 <geogName type="site"/>
                                 <geogFeat type="locus"/>

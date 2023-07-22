@@ -74,7 +74,7 @@
                         </summary>
                         <origin><date notBefore="0138" notAfter="0138" period="http://n2t.net/ark:/99152/p0m63njtmv8">138 CE</date><placeName>
                                 <region>Judaea</region>
-                                <settlement ref="http://pleiades.stoa.org/places/">
+                                <settlement ref="https://pleiades.stoa.org/places/">
                                     Jerusalem</settlement>
                                 <geogName type="site">Ummayad palace (Temple Mount)</geogName>
                                 <geogFeat type="locus"/>

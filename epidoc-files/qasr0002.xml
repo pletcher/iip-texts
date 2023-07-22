@@ -82,7 +82,7 @@
                         <origin><date notBefore="0324" notAfter="0638"
                                 period="http://n2t.net/ark:/99152/p0m63njjcn4">Byzantine</date><placeName>
                                 <region>Judaea</region>
-                                <settlement ref="http://pleiades.stoa.org/places/687966">Horvat
+                                <settlement ref="https://pleiades.stoa.org/places/687966">Horvat
                                     Qasra</settlement>
                                 <geogName type="site">Cave Chapel</geogName>
                                 <geogFeat type="locus">Over arched pathway between entrance hall and

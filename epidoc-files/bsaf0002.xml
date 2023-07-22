@@ -78,7 +78,7 @@
                         </summary>
                         <origin><date period="http://n2t.net/ark:/99152/p0m63njjcn4" notBefore="0596" notAfter="0701">596-701 CE</date><placeName>
                                 <region>Judaea </region>
-                                <settlement ref="http://pleiades.stoa.org/places/687928">Beit
+                                <settlement ref="https://pleiades.stoa.org/places/687928">Beit
                                     Safafa</settlement>
                                 <geogName type="site">Chapel at Kh. Sheibun</geogName>
                                 <geogFeat type="locus"/>

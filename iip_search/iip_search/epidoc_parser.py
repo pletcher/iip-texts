@@ -114,7 +114,10 @@ class EpidocParser:
             "//tei:placeName/tei:settlement", namespaces=NAMESPACES
         )
 
-        return dict(placename=settlement.text, pleaides_ref=settlement.get("ref"))
+        return dict(
+            placename=whitespace_regex.sub(" ", settlement.text),
+            pleiades_ref=settlement.get("ref"),
+        )
 
     def get_description(self):
         commentary = self.tree.xpath(
@@ -146,7 +149,7 @@ class EpidocParser:
 
         return dimensions
 
-    def get_iip_form(self):
+    def get_iip_forms(self):
         object_description = self.tree.find(
             self.iip_form_description_xpath, namespaces=NAMESPACES
         )

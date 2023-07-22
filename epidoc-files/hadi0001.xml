@@ -78,7 +78,7 @@
                         </summary>
                         <origin><date notBefore="0324" notAfter="0638" period="http://n2t.net/ark:/99152/p0m63njjcn4">Byzantine </date><placeName>
                                 <region>Coastal Plain</region>
-                                <settlement ref="http://pleiades.stoa.org/places/687953">Haditha </settlement>
+                                <settlement ref="https://pleiades.stoa.org/places/687953">Haditha </settlement>
                                 <geogName type="site">At the foot of a small hill about 200m
                                     southwest of the vllage threshing floor </geogName>
                                 <geogFeat type="locus"/>

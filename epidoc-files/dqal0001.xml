@@ -75,7 +75,7 @@
                         </summary>
                         <origin><date notBefore="0544" notAfter="0545" period="http://n2t.net/ark:/99152/p0m63njjcn4">544-545 CE</date><placeName>
                                 <region>Judaea </region>
-                                <settlement ref="http://pleiades.stoa.org/places/687881 ">Deir El
+                                <settlement ref="https://pleiades.stoa.org/places/687881 ">Deir El
                                     Qal'a</settlement>
                                 <geogName type="site">Chapel </geogName>
                                 <geogFeat type="locus"/>

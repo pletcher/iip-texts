@@ -78,7 +78,7 @@
                                 period="http://n2t.net/ark:/99152/p0m63njjcn4">Byzantine </date><placeName>
                                 <region>Judaea </region>
                                 <settlement
-                                    ref="http://pleiades.stoa.org/places/http://pleiades.stoa.org/places/687966/"
+                                    ref="https://pleiades.stoa.org/places/https://pleiades.stoa.org/places/687966/"
                                     >Horvat Qasra</settlement>
                                 <geogName type="site">Cave Chapel </geogName>
                                 <geogFeat type="locus">Room V</geogFeat>

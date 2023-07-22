@@ -75,7 +75,7 @@
                         notAfter="0450">200 CE - 450 CE</date>
                      <placeName>
                         <region>Golan</region>
-                        <settlement ref="http://pleiades.stoa.org/places/678006">Ahmadiyye</settlement>
+                        <settlement ref="https://pleiades.stoa.org/places/678006">Ahmadiyye</settlement>
                         <geogName type="site" />
                      </placeName>
                      <p>Discovered near the remains of a large building, in the North-West section

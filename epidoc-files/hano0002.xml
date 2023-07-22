@@ -74,7 +74,7 @@
                         </summary>
                         <origin><date notBefore="0401" notAfter="0500" period="http://n2t.net/ark:/99152/p0m63njjcn4">5th century CE</date><placeName>
                                 <region>Coastal Plain </region>
-                                <settlement ref="http://pleiades.stoa.org/places/678300">Hanotha</settlement>
+                                <settlement ref="https://pleiades.stoa.org/places/678300">Hanotha</settlement>
                                 <geogName type="site"/>
                                 <geogFeat type="locus"/>
                             </placeName>

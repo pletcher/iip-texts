@@ -73,7 +73,7 @@
                      <date period="Talmudic" notBefore="0070" notAfter="0500">70 CE - 500 CE</date>
                      <placeName>
                         <region>Golan</region>
-                        <settlement ref="http://pleiades.stoa.org/places/677994">Abilene</settlement>
+                        <settlement ref="https://pleiades.stoa.org/places/677994">Abilene</settlement>
                         <geogName type="site">synagogue</geogName>
                      </placeName>
                      <p />
