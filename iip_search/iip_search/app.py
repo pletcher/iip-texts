@@ -8,6 +8,7 @@ from flask import request
 from sqlalchemy import select
 
 from iip_search import models
+from iip_search import schemas
 
 from iip_search.db import init_db
 from iip_search.db import db_session
@@ -53,11 +54,7 @@ def search():
         models.Edition.searchable_text.match(search_string)
     )
     results = [
-        {
-            "inscription": r.inscription.filename,
-            "text": r.text,
-            "edition": r.id,
-        }
+        schemas.InscriptionSchema().dumps(r.inscription)
         for r in db_session.execute(stmt).scalars()
     ]
 
