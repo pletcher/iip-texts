@@ -8,6 +8,7 @@ from sqlalchemy import Column
 from sqlalchemy import Computed
 from sqlalchemy import ForeignKey
 from sqlalchemy import Table
+from sqlalchemy import Text
 from sqlalchemy import UniqueConstraint
 
 from sqlalchemy.dialects.postgresql import JSONB
@@ -23,6 +24,7 @@ from sqlalchemy.orm import sessionmaker
 
 from sqlalchemy.types import TypeDecorator
 
+from typing import Optional
 from typing import Set
 
 from iip_search.db import Base
@@ -70,7 +72,7 @@ class IIPPreservation(Base):
     __tablename__ = "iip_preservations"
     __table_args__ = (UniqueConstraint("xml_id", name="iip_preservation_xml_id"),)
     id: Mapped[int] = mapped_column(primary_key=True)
-    description: Mapped[str]
+    description: Mapped[Optional[str]] = mapped_column(Text)
     inscriptions: Mapped[Set["Inscription"]] = relationship(
         back_populates="iip_preservation"
     )
@@ -91,7 +93,9 @@ class Region(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     inscriptions: Mapped[Set["Inscription"]] = relationship(back_populates="region")
     label: Mapped[str] = mapped_column(nullable=False, unique=True)
-    description: Mapped[str] = mapped_column(nullable=False, unique=True)
+    description: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=False, unique=True
+    )
 
 
 iip_form_inscription = Table(
@@ -168,15 +172,15 @@ class BibliographicEntry(Base):
     __tablename__ = "bibliographic_entries"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    bibl_scope: Mapped[str]
-    bibl_scope_unit: Mapped[str]
+    bibl_scope: Mapped[Optional[str]]
+    bibl_scope_unit: Mapped[Optional[str]]
     inscriptions: Mapped[Set["Inscription"]] = relationship(
         secondary=inscription_bibliographic_entry,
         back_populates="bibliographic_entries",
     )
-    ptr_target: Mapped[str]
-    ptr_type: Mapped[str]
-    raw_xml: Mapped[str] = mapped_column(nullable=False)
+    ptr_target: Mapped[Optional[str]]
+    ptr_type: Mapped[Optional[str]]
+    raw_xml: Mapped[str] = mapped_column(Text, nullable=False)
     xml_id: Mapped[str] = mapped_column(nullable=False)
 
 
@@ -185,7 +189,7 @@ class IIPForm(Base):
     __table_args__ = (UniqueConstraint("xml_id", name="iip_form_xml_id"),)
     id: Mapped[int] = mapped_column(primary_key=True)
     ana: Mapped[str] = mapped_column(nullable=True)
-    description: Mapped[str]
+    description: Mapped[Optional[str]] = mapped_column(Text)
     inscriptions: Mapped[Set["Inscription"]] = relationship(
         back_populates="iip_forms", secondary=iip_form_inscription
     )
@@ -196,7 +200,7 @@ class IIPGenre(Base):
     __tablename__ = "iip_genres"
     __table_args__ = (UniqueConstraint("xml_id", name="iip_genre_xml_id"),)
     id: Mapped[int] = mapped_column(primary_key=True)
-    description: Mapped[str]
+    description: Mapped[Optional[str]] = mapped_column(Text)
     inscriptions: Mapped[Set["Inscription"]] = relationship(
         secondary=iip_genre_inscription, back_populates="iip_genres"
     )
@@ -207,7 +211,7 @@ class IIPMaterial(Base):
     __tablename__ = "iip_materials"
     __table_args__ = (UniqueConstraint("xml_id", name="iip_material_xml_id"),)
     id: Mapped[int] = mapped_column(primary_key=True)
-    description: Mapped[str]
+    description: Mapped[Optional[str]] = mapped_column(Text)
     inscriptions: Mapped[Set["Inscription"]] = relationship(
         secondary=iip_material_inscription, back_populates="iip_materials"
     )
@@ -218,7 +222,7 @@ class IIPReligion(Base):
     __tablename__ = "iip_religions"
     __table_args__ = (UniqueConstraint("xml_id", name="iip_religion_xml_id"),)
     id: Mapped[int] = mapped_column(primary_key=True)
-    description: Mapped[str]
+    description: Mapped[Optional[str]] = mapped_column(Text)
     inscriptions: Mapped[Set["Inscription"]] = relationship(
         secondary=iip_religion_inscription, back_populates="iip_religions"
     )
@@ -229,7 +233,7 @@ class IIPWriting(Base):
     __tablename__ = "iip_writings"
     __table_args__ = (UniqueConstraint("xml_id", name="iip_writing_xml_id"),)
     id: Mapped[int] = mapped_column(primary_key=True)
-    description: Mapped[str]
+    description: Mapped[Optional[str]] = mapped_column(Text)
     inscriptions: Mapped[Set["Inscription"]] = relationship(
         secondary=iip_writing_inscription, back_populates="iip_writings"
     )
@@ -262,10 +266,10 @@ class Inscription(Base):
     bibliographic_entries: Mapped[Set[BibliographicEntry]] = relationship(
         secondary=inscription_bibliographic_entry, back_populates="inscriptions"
     )
-    city_id = mapped_column(ForeignKey("cities.id"))
-    city: Mapped[City] = relationship(back_populates="inscriptions")
-    description: Mapped[str]
-    dimensions: Mapped[dict] = mapped_column(MutableDict.as_mutable(JSONB))
+    city_id = mapped_column(ForeignKey("cities.id"), nullable=True)
+    city: Mapped[Optional[City]] = relationship(back_populates="inscriptions")
+    description: Mapped[Optional[str]] = mapped_column(Text)
+    dimensions: Mapped[Optional[dict]] = mapped_column(MutableDict.as_mutable(JSONB))
     display_status: Mapped[DisplayStatus] = mapped_column(
         nullable=False, default=DisplayStatus.APPROVED
     )
@@ -294,15 +298,17 @@ class Inscription(Base):
     languages: Mapped[Set[Language]] = relationship(
         secondary=language_inscription, back_populates="inscriptions"
     )
-    not_after: Mapped[str]
-    not_before: Mapped[str]
+    not_after: Mapped[Optional[str]]
+    not_before: Mapped[Optional[str]]
     parsed_at: Mapped[datetime.datetime]
-    provenance_id = mapped_column(ForeignKey("provenances.id"))
-    provenance: Mapped[Provenance] = relationship(back_populates="inscriptions")
-    region_id = mapped_column(ForeignKey("regions.id"))
-    region: Mapped[Region] = relationship(back_populates="inscriptions")
-    short_description: Mapped[str]
-    title: Mapped[str]
+    provenance_id = mapped_column(ForeignKey("provenances.id"), nullable=True)
+    provenance: Mapped[Optional[Provenance]] = relationship(
+        back_populates="inscriptions"
+    )
+    region_id = mapped_column(ForeignKey("regions.id"), nullable=True)
+    region: Mapped[Optional[Region]] = relationship(back_populates="inscriptions")
+    short_description: Mapped[Optional[str]]
+    title: Mapped[Optional[str]]
 
 
 """
@@ -320,9 +326,9 @@ class Image(Base):
     __tablename__ = "images"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    description: Mapped[str]
+    description: Mapped[Optional[str]] = mapped_column(Text)
     graphic_url: Mapped[str] = mapped_column(nullable=False)
-    inscription_id = mapped_column(ForeignKey("inscriptions.id"))
+    inscription_id: Mapped[int] = mapped_column(ForeignKey("inscriptions.id"))
     inscription: Mapped[Inscription] = relationship(back_populates="images")
 
 
@@ -345,8 +351,8 @@ class Edition(Base):
     # we plan to query against this column. As it stands now, this column
     # is mainly a sanity check to make sure that the derived `text` field
     # looks correct.
-    raw_xml: Mapped[str]
-    text: Mapped[str]
+    raw_xml: Mapped[str] = mapped_column(Text)
+    text: Mapped[str] = mapped_column(Text)
     searchable_text = mapped_column(
         TSVector,
         Computed(

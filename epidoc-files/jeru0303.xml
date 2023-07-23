@@ -204,7 +204,7 @@
                   <ptr type="biblItem" target="IIP-649.xml"/>
                   <biblScope/>
                </bibl>
-                    <bibl>
+                    <bibl xml:id="b4">
                   <ptr type="biblItem" target="IIP-430.xml"/>
                   <biblScope/>
                </bibl>

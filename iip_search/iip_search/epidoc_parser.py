@@ -104,7 +104,7 @@ class EpidocParser:
                     bibl_scope_unit=bibl_scope_unit,
                     ptr_target=ptr_target,
                     ptr_type=ptr_type,
-                    raw_xml=etree.tostring(bibl),
+                    raw_xml=etree.tostring(bibl, encoding="unicode"),
                 )
             )
         return entries
@@ -114,10 +114,13 @@ class EpidocParser:
             "//tei:placeName/tei:settlement", namespaces=NAMESPACES
         )
 
-        return dict(
-            placename=whitespace_regex.sub(" ", settlement.text),
-            pleiades_ref=settlement.get("ref"),
-        )
+        if settlement and settlement.text is not None:
+            return dict(
+                placename=whitespace_regex.sub(" ", settlement.text),
+                pleiades_ref=settlement.get("ref"),
+            )
+
+        return None
 
     def get_description(self):
         commentary = self.tree.xpath(
@@ -408,15 +411,13 @@ class EpidocParser:
         return self.tree.xpath(f"{xpath}/tei:p/*", namespaces=NAMESPACES)
 
     def get_transcription(self):
-        return self._stringify_xml_and_text(self.filename, self.transcription_xpath)
+        return self._stringify_xml_and_text(self.transcription_xpath)
 
     def get_transcription_segmented(self):
-        return self._stringify_xml_and_text(
-            self.filename, self.transcription_segmented_xpath
-        )
+        return self._stringify_xml_and_text(self.transcription_segmented_xpath)
 
     def get_translation(self):
-        return self._stringify_xml_and_text(self.filename, self.translation_xpath)
+        return self._stringify_xml_and_text(self.translation_xpath)
 
     def _get_taxonomies(self):
         tree = etree.parse(TAXONOMY_FILE)
@@ -463,8 +464,8 @@ class EpidocParser:
         return etree.parse(self.filename)
 
     def _stringify_xml_and_text(self, xpath):
-        edition = self.get_edition(self.tree, xpath)
-        elements = self.get_text_elements(self.tree, xpath)
+        edition = self.get_edition(xpath)
+        elements = self.get_text_elements(xpath)
 
         if edition is not None:
             return (

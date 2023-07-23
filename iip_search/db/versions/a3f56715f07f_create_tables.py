@@ -1,24 +1,21 @@
-"""Create inscriptions table and relational tables based on XML schema
+"""Create tables
 
-Revision ID: 8593edebb67a
+Revision ID: a3f56715f07f
 Revises: 
-Create Date: 2023-07-20 15:23:22.844007
+Create Date: 2023-07-22 20:24:56.335009
 
 """
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
-from sqlalchemy.types import TypeDecorator
+
+import iip_search
 
 # revision identifiers, used by Alembic.
-revision = "8593edebb67a"
+revision = "a3f56715f07f"
 down_revision = None
 branch_labels = None
 depends_on = None
-
-
-class TSVector(TypeDecorator):
-    impl = postgresql.TSVECTOR
 
 
 def upgrade() -> None:
@@ -26,11 +23,11 @@ def upgrade() -> None:
     op.create_table(
         "bibliographic_entries",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("bibl_scope", sa.String(), nullable=False),
-        sa.Column("bibl_scope_unit", sa.String(), nullable=False),
-        sa.Column("ptr_target", sa.String(), nullable=False),
-        sa.Column("ptr_type", sa.String(), nullable=False),
-        sa.Column("raw_xml", sa.String(), nullable=False),
+        sa.Column("bibl_scope", sa.String(), nullable=True),
+        sa.Column("bibl_scope_unit", sa.String(), nullable=True),
+        sa.Column("ptr_target", sa.String(), nullable=True),
+        sa.Column("ptr_type", sa.String(), nullable=True),
+        sa.Column("raw_xml", sa.Text(), nullable=False),
         sa.Column("xml_id", sa.String(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -38,13 +35,15 @@ def upgrade() -> None:
         "cities",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("placename", sa.String(), nullable=False),
+        sa.Column("pleiades_ref", sa.String(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("placename", name="city_placename"),
     )
     op.create_table(
         "iip_forms",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("description", sa.String(), nullable=False),
+        sa.Column("ana", sa.String(), nullable=True),
+        sa.Column("description", sa.Text(), nullable=True),
         sa.Column("xml_id", sa.String(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("xml_id"),
@@ -53,7 +52,7 @@ def upgrade() -> None:
     op.create_table(
         "iip_genres",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("description", sa.String(), nullable=False),
+        sa.Column("description", sa.Text(), nullable=True),
         sa.Column("xml_id", sa.String(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("xml_id"),
@@ -62,7 +61,7 @@ def upgrade() -> None:
     op.create_table(
         "iip_materials",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("description", sa.String(), nullable=False),
+        sa.Column("description", sa.Text(), nullable=True),
         sa.Column("xml_id", sa.String(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("xml_id"),
@@ -71,7 +70,7 @@ def upgrade() -> None:
     op.create_table(
         "iip_preservations",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("description", sa.String(), nullable=False),
+        sa.Column("description", sa.Text(), nullable=True),
         sa.Column("xml_id", sa.String(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("xml_id"),
@@ -80,7 +79,7 @@ def upgrade() -> None:
     op.create_table(
         "iip_religions",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("description", sa.String(), nullable=False),
+        sa.Column("description", sa.Text(), nullable=True),
         sa.Column("xml_id", sa.String(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("xml_id"),
@@ -89,7 +88,8 @@ def upgrade() -> None:
     op.create_table(
         "iip_writings",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("description", sa.String(), nullable=False),
+        sa.Column("description", sa.Text(), nullable=True),
+        sa.Column("note", sa.String(), nullable=True),
         sa.Column("xml_id", sa.String(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("xml_id"),
@@ -116,7 +116,7 @@ def upgrade() -> None:
         "regions",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("label", sa.String(), nullable=False),
-        sa.Column("description", sa.String(), nullable=False),
+        sa.Column("description", sa.Text(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("description"),
         sa.UniqueConstraint("label"),
@@ -126,32 +126,25 @@ def upgrade() -> None:
         "inscriptions",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("city_id", sa.Integer(), nullable=True),
-        sa.Column("description", sa.String(), nullable=False),
-        sa.Column(
-            "dimensions", postgresql.JSONB(astext_type=sa.Text()), nullable=False
-        ),
+        sa.Column("description", sa.Text(), nullable=True),
+        sa.Column("dimensions", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.Column(
             "display_status",
             sa.Enum("APPROVED", "TO_CORRECT", "TO_APPROVE", name="displaystatus"),
             nullable=False,
         ),
         sa.Column("filename", sa.String(), nullable=False),
-        sa.Column("iip_form_id", sa.Integer(), nullable=True),
         sa.Column("iip_preservation_id", sa.Integer(), nullable=True),
-        sa.Column("not_after", sa.String(), nullable=False),
-        sa.Column("not_before", sa.String(), nullable=False),
-        sa.Column("parsed_at", sa.DateTime(), nullable=False),
         sa.Column("provenance_id", sa.Integer(), nullable=True),
+        sa.Column("not_after", sa.String(), nullable=True),
+        sa.Column("not_before", sa.String(), nullable=True),
+        sa.Column("parsed_at", sa.DateTime(), nullable=False),
         sa.Column("region_id", sa.Integer(), nullable=True),
-        sa.Column("short_description", sa.String(), nullable=False),
-        sa.Column("title", sa.String(), nullable=False),
+        sa.Column("short_description", sa.String(), nullable=True),
+        sa.Column("title", sa.String(), nullable=True),
         sa.ForeignKeyConstraint(
             ["city_id"],
             ["cities.id"],
-        ),
-        sa.ForeignKeyConstraint(
-            ["iip_form_id"],
-            ["iip_forms.id"],
         ),
         sa.ForeignKeyConstraint(
             ["iip_preservation_id"],
@@ -183,22 +176,36 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column("inscription_id", sa.Integer(), nullable=True),
+        sa.Column("raw_xml", sa.Text(), nullable=False),
+        sa.Column("text", sa.Text(), nullable=False),
         sa.Column(
             "searchable_text",
-            TSVector(),
+            iip_search.models.TSVector(),
             sa.Computed(
                 "to_tsvector('english', regexp_replace(normalize(text, NFKD), '[̀-ͯ]', '', 'g'))",
                 persisted=True,
             ),
             nullable=True,
         ),
-        sa.Column("raw_xml", sa.String(), nullable=False),
-        sa.Column("text", sa.String(), nullable=False),
         sa.ForeignKeyConstraint(
             ["inscription_id"],
             ["inscriptions.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_table(
+        "iip_form_inscription",
+        sa.Column("iip_form_id", sa.Integer(), nullable=False),
+        sa.Column("inscription_id", sa.Integer(), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["iip_form_id"],
+            ["iip_forms.id"],
+        ),
+        sa.ForeignKeyConstraint(
+            ["inscription_id"],
+            ["inscriptions.id"],
+        ),
+        sa.PrimaryKeyConstraint("iip_form_id", "inscription_id"),
     )
     op.create_table(
         "iip_genre_inscription",
@@ -259,10 +266,9 @@ def upgrade() -> None:
     op.create_table(
         "images",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("description", sa.String(), nullable=False),
+        sa.Column("description", sa.Text(), nullable=True),
         sa.Column("graphic_url", sa.String(), nullable=False),
-        sa.Column("inscription_id", sa.Integer(), nullable=True),
-        sa.Column("source", sa.String(), nullable=False),
+        sa.Column("inscription_id", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(
             ["inscription_id"],
             ["inscriptions.id"],
@@ -309,6 +315,7 @@ def downgrade() -> None:
     op.drop_table("iip_religion_inscription")
     op.drop_table("iip_material_inscription")
     op.drop_table("iip_genre_inscription")
+    op.drop_table("iip_form_inscription")
     op.drop_table("editions")
     op.drop_table("inscriptions")
     op.drop_table("regions")
