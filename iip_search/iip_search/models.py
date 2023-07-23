@@ -41,6 +41,14 @@ class City(Base):
     inscriptions: Mapped[Set["Inscription"]] = relationship(back_populates="city")
     placename: Mapped[str] = mapped_column(nullable=False)
     pleiades_ref: Mapped[str] = mapped_column(nullable=True)
+    searchable_text = mapped_column(
+        TSVector,
+        Computed(
+            """
+    to_tsvector('english', coalesce('placename', '') || coalesce('pleiades_ref', ''))
+    """
+        ),
+    )
 
 
 """
@@ -77,6 +85,14 @@ class IIPPreservation(Base):
         back_populates="iip_preservation"
     )
     xml_id: Mapped[str] = mapped_column(nullable=False, unique=True)
+    searchable_text = mapped_column(
+        TSVector,
+        Computed(
+            """
+    to_tsvector('english', coalesce('description', ''))
+    """
+        ),
+    )
 
 
 class Provenance(Base):
@@ -85,6 +101,14 @@ class Provenance(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     inscriptions: Mapped[Set["Inscription"]] = relationship(back_populates="provenance")
     placename: Mapped[str]
+    searchable_text = mapped_column(
+        TSVector,
+        Computed(
+            """
+    to_tsvector('english', coalesce('placename', ''))
+    """
+        ),
+    )
 
 
 class Region(Base):
@@ -95,6 +119,14 @@ class Region(Base):
     label: Mapped[str] = mapped_column(nullable=False, unique=True)
     description: Mapped[Optional[str]] = mapped_column(
         Text, nullable=False, unique=True
+    )
+    searchable_text = mapped_column(
+        TSVector,
+        Computed(
+            """
+    to_tsvector('english', coalesce('description', '') || coalesce('label', ''))
+    """
+        ),
     )
 
 
@@ -182,6 +214,14 @@ class BibliographicEntry(Base):
     ptr_type: Mapped[Optional[str]]
     raw_xml: Mapped[str] = mapped_column(Text, nullable=False)
     xml_id: Mapped[str] = mapped_column(nullable=False)
+    searchable_text = mapped_column(
+        TSVector,
+        Computed(
+            """
+    to_tsvector('english', coalesce('ptr_target', ''))
+    """
+        ),
+    )
 
 
 class IIPForm(Base):
@@ -194,6 +234,14 @@ class IIPForm(Base):
         back_populates="iip_forms", secondary=iip_form_inscription
     )
     xml_id: Mapped[str] = mapped_column(nullable=False, unique=True)
+    searchable_text = mapped_column(
+        TSVector,
+        Computed(
+            """
+    to_tsvector('english', coalesce('description', '') || coalesce('ana', ''))
+    """
+        ),
+    )
 
 
 class IIPGenre(Base):
@@ -205,6 +253,14 @@ class IIPGenre(Base):
         secondary=iip_genre_inscription, back_populates="iip_genres"
     )
     xml_id: Mapped[str] = mapped_column(nullable=False, unique=True)
+    searchable_text = mapped_column(
+        TSVector,
+        Computed(
+            """
+    to_tsvector('english', coalesce('description', ''))
+    """
+        ),
+    )
 
 
 class IIPMaterial(Base):
@@ -216,6 +272,14 @@ class IIPMaterial(Base):
         secondary=iip_material_inscription, back_populates="iip_materials"
     )
     xml_id: Mapped[str] = mapped_column(nullable=False, unique=True)
+    searchable_text = mapped_column(
+        TSVector,
+        Computed(
+            """
+    to_tsvector('english', coalesce('description', ''))
+    """
+        ),
+    )
 
 
 class IIPReligion(Base):
@@ -227,6 +291,14 @@ class IIPReligion(Base):
         secondary=iip_religion_inscription, back_populates="iip_religions"
     )
     xml_id: Mapped[str] = mapped_column(nullable=False, unique=True)
+    searchable_text = mapped_column(
+        TSVector,
+        Computed(
+            """
+    to_tsvector('english', coalesce('description', ''))
+    """
+        ),
+    )
 
 
 class IIPWriting(Base):
@@ -239,6 +311,14 @@ class IIPWriting(Base):
     )
     note: Mapped[str] = mapped_column(nullable=True)
     xml_id: Mapped[str] = mapped_column(nullable=False, unique=True)
+    searchable_text = mapped_column(
+        TSVector,
+        Computed(
+            """
+    to_tsvector('english', coalesce('description', '') || coalesce('note', ''))
+    """
+        ),
+    )
 
 
 class Language(Base):
@@ -250,6 +330,14 @@ class Language(Base):
     )
     label: Mapped[str] = mapped_column(nullable=False, unique=True)
     short_form: Mapped[str] = mapped_column(nullable=False, unique=True)
+    searchable_text = mapped_column(
+        TSVector,
+        Computed(
+            """
+    to_tsvector('english', coalesce('short_form', '') || coalesce('label', ''))
+    """
+        ),
+    )
 
 
 class DisplayStatus(enum.Enum):
@@ -309,6 +397,19 @@ class Inscription(Base):
     region: Mapped[Optional[Region]] = relationship(back_populates="inscriptions")
     short_description: Mapped[Optional[str]]
     title: Mapped[Optional[str]]
+    searchable_text = mapped_column(
+        TSVector,
+        Computed(
+            """
+        to_tsvector('english', 
+            coalesce(description, '') || 
+            coalesce(filename, '') || 
+            coalesce(short_description, '') || 
+            coalesce(title, '')
+        )
+        """
+        ),
+    )
 
 
 """
@@ -341,6 +442,13 @@ class EditionType(enum.Enum):
 
 class Edition(Base):
     __tablename__ = "editions"
+    __table_args__ = (
+        UniqueConstraint(
+            "edition_type",
+            "inscription_id",
+            name="edition_type_inscription_id",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     edition_type: Mapped[EditionType]

@@ -1,18 +1,22 @@
 # -*- coding: utf-8 -*-
+import os
 
 from flask import Flask
+from flask import json
 from flask import request
 
 from sqlalchemy import select
 
-from .db import init_db, db_session
+from iip_search import models
 
-import os
+from iip_search.db import init_db
+from iip_search.db import db_session
 
 app = Flask(__name__)
 
-app.config["JSON_AS_ASCII"] = False
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DB_URL")
+
+json.provider.DefaultJSONProvider.ensure_ascii = False
 
 with app.app_context():
     init_db()
@@ -45,9 +49,15 @@ def heartbeat():
 @app.route("/")
 def search():
     search_string = request.args.get("search", "")
-    stmt = select(Edition).where(Edition.searchable_text.match(search_string))
+    stmt = select(models.Edition).where(
+        models.Edition.searchable_text.match(search_string)
+    )
     results = [
-        {"inscription": r.inscription.filename, "text": r.text}
+        {
+            "inscription": r.inscription.filename,
+            "text": r.text,
+            "edition": r.id,
+        }
         for r in db_session.execute(stmt).scalars()
     ]
 

@@ -316,7 +316,7 @@ class EpidocParser:
             f"//*[@{XML_LANG_ATTRIB}]", namespaces=NAMESPACES
         ):
             lang = tag.get(XML_LANG_ATTRIB).strip()
-            logging.info(f"Looking up short form for {lang}...")
+            logging.debug(f"Looking up short form for {lang}...")
 
             if lang.strip() == "":
                 continue
