@@ -15,6 +15,9 @@ from iip_search.epidoc_parser import EpidocParser
 logging.basicConfig(format="%(levelname)s: %(asctime)s %(message)s", level=logging.INFO)
 
 
+# FIXME: Make sure many-to-many relationships are ingested correctly
+
+
 def main(session):
     files = list_directory_xml("../epidoc-files")
 
@@ -66,45 +69,6 @@ def main(session):
         else:
             logging.warning(f"No region for {file}!")
 
-        bibliographic_entries = [
-            get_or_create(session, models.BibliographicEntry, **raw)
-            for raw in bibliographic_entries_raw
-        ]
-
-        iip_forms = []
-        if iip_forms_raw is not None:
-            iip_forms = [
-                get_or_create(session, models.IIPForm, **raw) for raw in iip_forms_raw
-            ]
-
-        iip_genres = []
-        if iip_genres_raw is not None:
-            iip_genres = [
-                get_or_create(session, models.IIPGenre, **raw) for raw in iip_genres_raw
-            ]
-
-        iip_materials = [
-            get_or_create(session, models.IIPMaterial, **raw)
-            for raw in iip_materials_raw
-        ]
-
-        iip_religions = []
-        if iip_religions_raw is not None:
-            iip_religions = [
-                get_or_create(session, models.IIPReligion, **raw)
-                for raw in iip_religions_raw
-            ]
-
-        iip_writings = []
-        if iip_writings_raw is not None:
-            iip_writings = [
-                get_or_create_iip_writing(session, **raw) for raw in iip_writings_raw
-            ]
-
-        languages = [
-            get_or_create(session, models.Language, **raw) for raw in languages_raw
-        ]
-
         inscription = get_or_create_inscription(
             session,
             file,
@@ -123,6 +87,71 @@ def main(session):
             ),
         )
 
+        bibliographic_entries = [
+            get_or_create(session, models.BibliographicEntry, **raw)
+            for raw in bibliographic_entries_raw
+        ]
+
+        for entry in bibliographic_entries:
+            inscription.bibliographic_entries.add(entry)
+
+        iip_forms = []
+        if iip_forms_raw is not None:
+            iip_forms = [
+                get_or_create(session, models.IIPForm, **raw) for raw in iip_forms_raw
+            ]
+
+        for form in iip_forms:
+            inscription.iip_forms.add(form)
+
+        iip_genres = []
+        if iip_genres_raw is not None:
+            iip_genres = [
+                get_or_create(session, models.IIPGenre, **raw) for raw in iip_genres_raw
+            ]
+
+        for genre in iip_genres:
+            inscription.iip_genres.add(genre)
+
+        iip_materials = [
+            get_or_create(session, models.IIPMaterial, **raw)
+            for raw in iip_materials_raw
+        ]
+
+        for material in iip_materials:
+            inscription.iip_materials.add(material)
+
+        iip_religions = []
+        if iip_religions_raw is not None:
+            iip_religions = [
+                get_or_create(session, models.IIPReligion, **raw)
+                for raw in iip_religions_raw
+            ]
+
+        for religion in iip_religions:
+            inscription.iip_religions.add(religion)
+
+        iip_writings = []
+        if iip_writings_raw is not None:
+            iip_writings = [
+                get_or_create_iip_writing(session, **raw) for raw in iip_writings_raw
+            ]
+
+        for writing in iip_writings:
+            inscription.iip_writings.add(writing)
+
+        images = [get_or_create(session, models.Image, **raw) for raw in images_raw]
+
+        for image in images:
+            inscription.images.add(image)
+
+        languages = [
+            get_or_create(session, models.Language, **raw) for raw in languages_raw
+        ]
+
+        for language in languages:
+            inscription.languages.add(language)
+
         (transcription_xml, s_transcription) = parser.get_transcription()
         (
             transcription_segmented_xml,
@@ -131,30 +160,30 @@ def main(session):
         (translation_xml, s_translation) = parser.get_translation()
 
         if transcription_xml is not None:
-            inscription.editions.add(
-                models.Edition(
-                    edition_type=models.EditionType.TRANSCRIPTION,
-                    raw_xml=transcription_xml,
-                    text=s_transcription,
-                )
+            upsert_edition(
+                session,
+                edition_type=models.EditionType.TRANSCRIPTION,
+                inscription_id=inscription.id,
+                raw_xml=transcription_xml,
+                text=s_transcription,
             )
 
         if transcription_segmented_xml is not None:
-            inscription.editions.add(
-                models.Edition(
-                    edition_type=models.EditionType.TRANSCRIPTION_SEGMENTED,
-                    raw_xml=transcription_segmented_xml,
-                    text=s_transcription_segmented,
-                )
+            upsert_edition(
+                session,
+                edition_type=models.EditionType.TRANSCRIPTION_SEGMENTED,
+                inscription_id=inscription.id,
+                raw_xml=transcription_segmented_xml,
+                text=s_transcription_segmented,
             )
 
         if translation_xml is not None:
-            inscription.editions.add(
-                models.Edition(
-                    edition_type=models.EditionType.TRANSLATION,
-                    raw_xml=translation_xml,
-                    text=s_translation,
-                )
+            upsert_edition(
+                session,
+                edition_type=models.EditionType.TRANSLATION,
+                inscription_id=inscription.id,
+                raw_xml=translation_xml,
+                text=s_translation,
             )
 
         session.add(inscription)
@@ -184,6 +213,28 @@ def get_or_create_city(session, placename, pleiades_ref):
         session.add(instance)
         session.commit()
         return instance
+
+
+def upsert_edition(session, **kwargs):
+    instance = (
+        session.query(models.Edition)
+        .filter_by(
+            inscription_id=kwargs.get("inscription_id"),
+            edition_type=kwargs.get("edition_type"),
+        )
+        .one_or_none()
+    )
+
+    if instance:
+        instance.raw_xml = kwargs.get("raw_xml")
+        instance.text = kwargs.get("text")
+    else:
+        instance = models.Edition(**kwargs)
+        session.add(instance)
+
+    session.commit()
+
+    return instance
 
 
 def get_or_create_iip_writing(session, **kwargs):

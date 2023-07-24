@@ -45,7 +45,7 @@ class City(Base):
         TSVector,
         Computed(
             """
-    to_tsvector('english', coalesce('placename', '') || coalesce('pleiades_ref', ''))
+    to_tsvector('english', coalesce(placename, '') || coalesce(pleiades_ref, ''))
     """
         ),
     )
@@ -89,7 +89,7 @@ class IIPPreservation(Base):
         TSVector,
         Computed(
             """
-    to_tsvector('english', coalesce('description', ''))
+    to_tsvector('english', coalesce(description, ''))
     """
         ),
     )
@@ -105,7 +105,7 @@ class Provenance(Base):
         TSVector,
         Computed(
             """
-    to_tsvector('english', coalesce('placename', ''))
+    to_tsvector('english', coalesce(placename, ''))
     """
         ),
     )
@@ -124,7 +124,7 @@ class Region(Base):
         TSVector,
         Computed(
             """
-    to_tsvector('english', coalesce('description', '') || coalesce('label', ''))
+    to_tsvector('english', coalesce(description, '') || coalesce(label, ''))
     """
         ),
     )
@@ -218,7 +218,7 @@ class BibliographicEntry(Base):
         TSVector,
         Computed(
             """
-    to_tsvector('english', coalesce('ptr_target', ''))
+    to_tsvector('english', coalesce(ptr_target, ''))
     """
         ),
     )
@@ -238,7 +238,7 @@ class IIPForm(Base):
         TSVector,
         Computed(
             """
-    to_tsvector('english', coalesce('description', '') || coalesce('ana', ''))
+    to_tsvector('english', coalesce(description, '') || coalesce(ana, ''))
     """
         ),
     )
@@ -257,7 +257,7 @@ class IIPGenre(Base):
         TSVector,
         Computed(
             """
-    to_tsvector('english', coalesce('description', ''))
+    to_tsvector('english', coalesce(description, ''))
     """
         ),
     )
@@ -276,7 +276,7 @@ class IIPMaterial(Base):
         TSVector,
         Computed(
             """
-    to_tsvector('english', coalesce('description', ''))
+    to_tsvector('english', coalesce(description, ''))
     """
         ),
     )
@@ -295,7 +295,7 @@ class IIPReligion(Base):
         TSVector,
         Computed(
             """
-    to_tsvector('english', coalesce('description', ''))
+    to_tsvector('english', coalesce(description, ''))
     """
         ),
     )
@@ -315,7 +315,7 @@ class IIPWriting(Base):
         TSVector,
         Computed(
             """
-    to_tsvector('english', coalesce('description', '') || coalesce('note', ''))
+    to_tsvector('english', coalesce(description, '') || coalesce(note, ''))
     """
         ),
     )
@@ -334,7 +334,7 @@ class Language(Base):
         TSVector,
         Computed(
             """
-    to_tsvector('english', coalesce('short_form', '') || coalesce('label', ''))
+    to_tsvector('english', coalesce(short_form, '') || coalesce(label, ''))
     """
         ),
     )
@@ -363,7 +363,7 @@ class Inscription(Base):
     )
     editions: Mapped[Set["Edition"]] = relationship(back_populates="inscription")
     filename: Mapped[str] = mapped_column(nullable=False, unique=True)
-    iip_forms: Mapped[IIPForm] = relationship(
+    iip_forms: Mapped[Set[IIPForm]] = relationship(
         secondary=iip_form_inscription, back_populates="inscriptions"
     )
     iip_genres: Mapped[Set[IIPGenre]] = relationship(
@@ -379,7 +379,7 @@ class Inscription(Base):
     iip_religions: Mapped[Set[IIPReligion]] = relationship(
         secondary=iip_religion_inscription, back_populates="inscriptions"
     )
-    iip_writings: Mapped[IIPWriting] = relationship(
+    iip_writings: Mapped[Set[IIPWriting]] = relationship(
         secondary=iip_writing_inscription, back_populates="inscriptions"
     )
     images: Mapped[Set["Image"]] = relationship(back_populates="inscription")

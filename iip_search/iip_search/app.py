@@ -54,7 +54,7 @@ def search():
         models.Edition.searchable_text.match(search_string)
     )
     results = [
-        schemas.InscriptionSchema().dumps(r.inscription)
+        schemas.InscriptionSchema().dump(r.inscription)
         for r in db_session.execute(stmt).scalars()
     ]
 
