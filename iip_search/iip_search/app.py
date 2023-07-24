@@ -50,12 +50,19 @@ def heartbeat():
 @app.route("/")
 def search():
     search_string = request.args.get("search", "")
-    stmt = select(models.Edition).where(
-        models.Edition.searchable_text.match(search_string)
+
+    stmt = (
+        select(models.Inscription)
+        .distinct(models.Inscription.id)
+        .join(
+            models.Inscription.editions.and_(
+                models.Edition.searchable_text.match(search_string)
+            ),
+        )
     )
+
     results = [
-        schemas.InscriptionSchema().dump(r.inscription)
-        for r in db_session.execute(stmt).scalars()
+        schemas.InscriptionSchema().dump(r) for r in db_session.execute(stmt).scalars()
     ]
 
     return {"results": results, "search": search_string}

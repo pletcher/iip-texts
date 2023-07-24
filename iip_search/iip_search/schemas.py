@@ -12,7 +12,6 @@ class BibliographicEntrySchema(SQLAlchemyAutoSchema):
     class Meta:
         model = models.BibliographicEntry
         exclude = ("searchable_text",)
-        include_relationships = True
         load_instance = True
         sqla_session = db.db_session
 
@@ -114,6 +113,7 @@ class InscriptionSchema(SQLAlchemyAutoSchema):
     editions = fields.List(
         masqla_fields.Nested(EditionSchema(exclude=("inscription",)))
     )
+    bibliographic_entries = masqla_fields.Nested(BibliographicEntrySchema, many=True)
     city = masqla_fields.Nested(CitySchema)
     iip_forms = masqla_fields.Nested(IIPFormSchema, many=True)
     iip_genres = masqla_fields.Nested(IIPGenreSchema, many=True)
