@@ -10,3 +10,4 @@ venv
 *.egg-info
 .ipynb_checkpoints
 .virtual_documents
+iip_search/example_result.json
