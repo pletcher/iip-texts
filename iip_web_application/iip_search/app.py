@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import unicodedata
 
 from flask import Flask
 from flask import json
@@ -50,13 +51,13 @@ def heartbeat():
 @app.route("/")
 def search():
     search_string = request.args.get("search", "")
-
+    normalized_string = remove_accents(search_string)
     stmt = (
         select(models.Inscription)
         .distinct(models.Inscription.id)
         .join(
             models.Inscription.editions.and_(
-                models.Edition.searchable_text.match(search_string)
+                models.Edition.searchable_text.match(normalized_string)
             ),
         )
     )
@@ -71,3 +72,8 @@ def search():
 @app.teardown_appcontext
 def shutdown_session(exception=None):
     db_session.remove()
+
+
+def remove_accents(input_str):
+    nfkd_form = unicodedata.normalize("NFKD", input_str)
+    return "".join([c for c in nfkd_form if not unicodedata.combining(c)])
