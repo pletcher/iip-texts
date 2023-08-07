@@ -2,26 +2,40 @@
 import os
 import unicodedata
 
-from flask import Flask
-from flask import json
-from flask import request
+from fastapi import Depends
+from fastapi import FastAPI
+from fastapi import Request
+from fastapi import status
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import ResponseValidationError
+from fastapi.responses import JSONResponse
 
 from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from iip_search import models
 from iip_search import schemas
 
-from iip_search.db import init_db
-from iip_search.db import db_session
+from iip_search.db import SessionLocal
+from iip_search.db import engine
 
-app = Flask(__name__)
+app = FastAPI()
 
-app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DB_URL")
 
-json.provider.DefaultJSONProvider.ensure_ascii = False
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-with app.app_context():
-    init_db()
+
+@app.exception_handler(ResponseValidationError)
+async def validation_exception_handler(request: Request, exc: ResponseValidationError):
+    return JSONResponse(
+        status_code=500,
+        content=jsonable_encoder({"detail": exc.errors(), "body": exc.body}),
+    )
 
 
 @app.route("/heartbeat")
@@ -48,10 +62,9 @@ def heartbeat():
 # )`
 
 
-@app.route("/")
-def search():
-    search_string = request.args.get("search", "")
-    normalized_string = remove_accents(search_string)
+@app.get("/", response_model=list[schemas.InscriptionResponse])
+def search(search: str | None = None, db: Session = Depends(get_db)):
+    normalized_string = remove_accents(search)
     stmt = (
         select(models.Inscription)
         .distinct(models.Inscription.id)
@@ -62,16 +75,14 @@ def search():
         )
     )
 
-    results = [
-        schemas.InscriptionSchema().dump(r) for r in db_session.execute(stmt).scalars()
-    ]
+    results = db.execute(stmt).scalars()
 
-    return {"results": results, "search": search_string}
+    return results
 
 
-@app.teardown_appcontext
-def shutdown_session(exception=None):
-    db_session.remove()
+# @app.teardown_appcontext
+# def shutdown_session(exception=None):
+#     db_session.remove()
 
 
 def remove_accents(input_str):

@@ -1,137 +1,108 @@
-from marshmallow import fields
-from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
-from marshmallow_sqlalchemy import auto_field
-from marshmallow_sqlalchemy import fields as masqla_fields
-from sqlalchemy.dialects.postgresql.types import TSVECTOR
+from typing import List
+from typing import Optional
 
-from iip_search import models
-from iip_search import db
+from pydantic import BaseModel
+from pydantic import ConfigDict
 
-
-class BibliographicEntrySchema(SQLAlchemyAutoSchema):
-    class Meta:
-        model = models.BibliographicEntry
-        exclude = ("searchable_text",)
-        load_instance = True
-        sqla_session = db.db_session
+from .models import DisplayStatus, EditionType
 
 
-class CitySchema(SQLAlchemyAutoSchema):
-    class Meta:
-        model = models.City
-        exclude = ("searchable_text",)
-        sqla_session = db.db_session
+class IIPBase(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
 
 
-class EditionSchema(SQLAlchemyAutoSchema):
-    id = auto_field()
-    inscription = masqla_fields.Nested(lambda: InscriptionSchema(only=("id", "title")))
-
-    class Meta:
-        model = models.Edition
-        exclude = ("searchable_text",)
-        include_fk = True
-        load_instance = True
-        sqla_session = db.db_session
-
-    edition_type = fields.Enum(models.EditionType)
+class Edition(IIPBase):
+    id: int
+    edition_type: EditionType
+    raw_xml: str
+    text: str
 
 
-class IIPFormSchema(SQLAlchemyAutoSchema):
-    class Meta:
-        model = models.IIPForm
-        exclude = ("searchable_text",)
-        sqla_session = db.db_session
+class Image(IIPBase):
+    id: int
+    description: Optional[str]
+    graphic_url: str
 
 
-class IIPGenreSchema(SQLAlchemyAutoSchema):
-    class Meta:
-        model = models.IIPGenre
-        exclude = ("searchable_text",)
-        sqla_session = db.db_session
+class Inscription(IIPBase):
+    id: int
+    description: Optional[str]
+    dimensions: dict = None
+    display_status: DisplayStatus
+    editions: List[Edition]
+    filename: str
+    images: List[Image]
+    not_after: Optional[str]
+    not_before: Optional[str]
+    short_description: Optional[str]
+    title: Optional[str]
 
 
-class IIPMaterialSchema(SQLAlchemyAutoSchema):
-    class Meta:
-        model = models.IIPMaterial
-        exclude = ("searchable_text",)
-        sqla_session = db.db_session
+class City(IIPBase):
+    id: int
+    placename: str
+    pleiades_ref: Optional[str]
 
 
-class IIPPreservationSchema(SQLAlchemyAutoSchema):
-    class Meta:
-        model = models.IIPPreservation
-        exclude = ("searchable_text",)
-        sqla_session = db.db_session
+class IIPPreservation(IIPBase):
+    id: int
+    description: Optional[str]
+    xml_id: str
 
 
-class IIPReligionSchema(SQLAlchemyAutoSchema):
-    class Meta:
-        model = models.IIPReligion
-        exclude = ("searchable_text",)
-        sqla_session = db.db_session
+class Provenance(IIPBase):
+    id: int
+    placename: str
 
 
-class IIPWritingSchema(SQLAlchemyAutoSchema):
-    class Meta:
-        model = models.IIPWriting
-        exclude = ("searchable_text",)
-        sqla_session = db.db_session
+class Region(IIPBase):
+    id: int
+    label: str
+    description: str
 
 
-class ImageSchema(SQLAlchemyAutoSchema):
-    class Meta:
-        model = models.Image
-        sqla_session = db.db_session
+class BibliographicEntry(IIPBase):
+    id: int
+    bibl_scope: Optional[str]
+    bibl_scope_unit: Optional[str]
+    ptr_target: Optional[str]
+    ptr_type: Optional[str]
+    raw_xml: str
+    xml_id: str
 
 
-class LanguageSchema(SQLAlchemyAutoSchema):
-    label = auto_field()
-
-    class Meta:
-        model = models.Language
-        exclude = ("searchable_text",)
-        sqla_session = db.db_session
+class IIPForm(IIPBase):
+    id: int
+    ana: Optional[str]
+    description: Optional[str]
+    xml_id: str
 
 
-class ProvenanceSchema(SQLAlchemyAutoSchema):
-    class Meta:
-        model = models.Provenance
-        exclude = ("searchable_text",)
-        sqla_session = db.db_session
+class IIPGenre(IIPBase):
+    id: int
+    description: Optional[str]
+    xml_id: str
 
 
-class RegionSchema(SQLAlchemyAutoSchema):
-    class Meta:
-        model = models.Region
-        exclude = ("searchable_text",)
-        sqla_session = db.db_session
+class IIPReligion(IIPBase):
+    id: int
+    description: Optional[str]
+    xml_id: str
 
 
-class InscriptionSchema(SQLAlchemyAutoSchema):
-    id = auto_field()
-    editions = fields.List(
-        masqla_fields.Nested(EditionSchema(exclude=("inscription",)))
-    )
-    bibliographic_entries = masqla_fields.Nested(BibliographicEntrySchema, many=True)
-    city = masqla_fields.Nested(CitySchema)
-    iip_forms = masqla_fields.Nested(IIPFormSchema, many=True)
-    iip_genres = masqla_fields.Nested(IIPGenreSchema, many=True)
-    iip_materials = masqla_fields.Nested(IIPMaterialSchema, many=True)
-    iip_preservation = masqla_fields.Nested(IIPPreservationSchema)
-    iip_religions = masqla_fields.Nested(IIPReligionSchema, many=True)
-    iip_writings = masqla_fields.Nested(IIPWritingSchema, many=True)
-    images = masqla_fields.Nested(ImageSchema, many=True)
-    languages = fields.List(masqla_fields.Nested(LanguageSchema))
-    provenance = masqla_fields.Nested(ProvenanceSchema)
-    region = masqla_fields.Nested(RegionSchema)
+class Language(IIPBase):
+    id: int
+    label: str
+    short_form: str
 
-    class Meta:
-        model = models.Inscription
-        exclude = (
-            "display_status",
-            "searchable_text",
-        )
-        include_relationships = True
-        load_instance = True
-        sqla_session = db.db_session
+
+class InscriptionResponse(Inscription):
+    city: Optional[City]
+    iip_preservation: Optional[IIPPreservation]
+    provenance: Optional[Provenance]
+    region: Optional[Region]
+    bibliographic_entries: List[BibliographicEntry]
+    iip_forms: List[IIPForm]
+    iip_genres: List[IIPGenre]
+    iip_religions: List[IIPReligion]
+    languages: List[Language]
