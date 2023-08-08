@@ -1,3 +1,7 @@
+<script>
+	import SearchMap from './SearchMap.svelte';
+</script>
+
 <div>
 	<!-- Static sidebar for desktop -->
 	<div class="fixed inset-y-0 z-50 flex w-72 flex-col">
@@ -243,6 +247,7 @@
 		<main class="py-10">
 			<div class="px-4 sm:px-6 lg:px-8">
 				<slot />
+				<SearchMap />
 			</div>
 		</main>
 	</div>
