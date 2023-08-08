@@ -78,7 +78,7 @@
                                 period="http://n2t.net/ark:/99152/p0m63njjcn4">4th to 7th centuries
                                 BCE</date><placeName>
                                 <region>Jordan Valley</region>
-                                <settlement>Jericho <geo>https://pleiades.stoa.org/places/687917
+                                <settlement ref="https://pleiades.stoa.org/places/687917">Jericho <geo>31.8710014838,35.4441379897
                                     </geo></settlement>
                                 <geogName type="site">‘Ein Auja</geogName>
                                 <geogFeat type="locus"/>

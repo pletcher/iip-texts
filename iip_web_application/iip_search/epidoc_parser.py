@@ -114,13 +114,17 @@ class EpidocParser:
             "//tei:placeName/tei:settlement", namespaces=NAMESPACES
         )
 
-        if settlement and settlement.text is not None:
+        if settlement is not None:
+            try:
+                placename = whitespace_regex.sub(" ", settlement.text)
+            except TypeError:
+                logging.warn(f"No placename provided for {self.filename}.")
+                placename = "No placename provided"
+
             return dict(
-                placename=whitespace_regex.sub(" ", settlement.text),
+                placename=placename,
                 pleiades_ref=settlement.get("ref"),
             )
-
-        return None
 
     def get_description(self):
         commentary = self.tree.xpath(
@@ -339,6 +343,35 @@ class EpidocParser:
                 )
 
         return languages
+
+    def get_location_coordinates(self):
+        geo = self.tree.xpath("//tei:geo/text()", namespaces=NAMESPACES)
+
+        if len(geo) > 0:
+            try:
+                coords = [float(s) for s in geo[0].strip().split(",")]
+            except ValueError:
+                logging.error(f"Incorrect geo coordinates: {geo[0]}.")
+                coords = [0, 0]
+
+            return coords
+
+    def get_location_metadata(self):
+        locus = self.tree.xpath(
+            "//tei:geogFeat[@type='locus']/text()", namespaces=NAMESPACES
+        )
+        site = self.tree.xpath(
+            "//tei:geogName[@type='site']/text()", namespaces=NAMESPACES
+        )
+
+        metadata = {}
+        if len(locus) > 0:
+            metadata["locus"] = locus[0]
+
+        if len(site) > 0:
+            metadata["site"] = site[0]
+
+        return metadata
 
     def get_not_before(self):
         date = self.tree.find("//tei:origin/tei:date", namespaces=NAMESPACES)

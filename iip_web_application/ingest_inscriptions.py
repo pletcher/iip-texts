@@ -36,6 +36,8 @@ def main(session):
         iip_writings_raw = parser.get_iip_writings()
         images_raw = parser.get_images()
         languages_raw = parser.get_languages()
+        location_coordinates = parser.get_location_coordinates()
+        location_metadata = parser.get_location_metadata()
         not_after_raw = parser.get_not_after()
         not_before_raw = parser.get_not_before()
         provenance_raw = parser.get_provenance()
@@ -77,6 +79,8 @@ def main(session):
                 description=description_raw,
                 dimensions={"dimensions": dimensions_raw},
                 iip_preservation_id=iip_preservation.id if iip_preservation else None,
+                location_coordinates=location_coordinates,
+                location_metadata=location_metadata,
                 not_after=not_after_raw,
                 not_before=not_before_raw,
                 parsed_at=datetime.now(),
@@ -140,7 +144,11 @@ def main(session):
         for writing in iip_writings:
             inscription.iip_writings.add(writing)
 
-        images = [get_or_create(session, models.Image, **raw) for raw in images_raw]
+        images = [
+            get_or_create(session, models.Image, inscription_id=inscription.id, **raw)
+            for raw in images_raw
+            if len(raw["graphic_url"]) > 0
+        ]
 
         for image in images:
             inscription.images.add(image)

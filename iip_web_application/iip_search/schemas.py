@@ -27,11 +27,13 @@ class Image(IIPBase):
 class Inscription(IIPBase):
     id: int
     description: Optional[str]
-    dimensions: dict = None
+    dimensions: Optional[dict]
     display_status: DisplayStatus
     editions: List[Edition]
     filename: str
     images: List[Image]
+    location_coordinates: Optional[List[float]]
+    location_metadata: Optional[dict]
     not_after: Optional[str]
     not_before: Optional[str]
     short_description: Optional[str]
@@ -96,13 +98,15 @@ class Language(IIPBase):
     short_form: str
 
 
-class InscriptionResponse(Inscription):
+class InscriptionResponse(IIPBase):
+    id: int
     city: Optional[City]
-    iip_preservation: Optional[IIPPreservation]
-    provenance: Optional[Provenance]
-    region: Optional[Region]
-    bibliographic_entries: List[BibliographicEntry]
-    iip_forms: List[IIPForm]
-    iip_genres: List[IIPGenre]
-    iip_religions: List[IIPReligion]
-    languages: List[Language]
+    description: Optional[str]
+    dimensions: Optional[dict]
+    filename: str
+    location_coordinates: Optional[List[float]]
+    location_metadata: Optional[dict]
+    not_after: Optional[str]
+    not_before: Optional[str]
+    short_description: Optional[str]
+    title: Optional[str]

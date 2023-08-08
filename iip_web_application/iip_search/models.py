@@ -6,11 +6,13 @@ from dataclasses import dataclass
 from sqlalchemy import create_engine
 from sqlalchemy import Column
 from sqlalchemy import Computed
+from sqlalchemy import Float
 from sqlalchemy import ForeignKey
 from sqlalchemy import Table
 from sqlalchemy import Text
 from sqlalchemy import UniqueConstraint
 
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import TSVECTOR
 
@@ -25,6 +27,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.types import TypeDecorator
 
 from typing import Optional
+from typing import List
 from typing import Set
 
 from iip_search.db import Base
@@ -385,6 +388,12 @@ class Inscription(Base):
     images: Mapped[Set["Image"]] = relationship(back_populates="inscription")
     languages: Mapped[Set[Language]] = relationship(
         secondary=language_inscription, back_populates="inscriptions"
+    )
+    location_coordinates: Mapped[Optional[List[Float]]] = mapped_column(
+        ARRAY(Float), nullable=True
+    )
+    location_metadata: Mapped[Optional[dict]] = mapped_column(
+        MutableDict.as_mutable(JSONB)
     )
     not_after: Mapped[Optional[str]]
     not_before: Mapped[Optional[str]]
