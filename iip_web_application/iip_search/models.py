@@ -35,11 +35,13 @@ from iip_search.db import Base
 
 class TSVector(TypeDecorator):
     impl = TSVECTOR
+    cache_ok = False
 
 
 class City(Base):
     __tablename__ = "cities"
     __table_args__ = (UniqueConstraint("placename", name="city_placename"),)
+
     id: Mapped[int] = mapped_column(primary_key=True)
     inscriptions: Mapped[Set["Inscription"]] = relationship(back_populates="city")
     placename: Mapped[str] = mapped_column(nullable=False)
