@@ -129,6 +129,7 @@ class InscriptionResponse(IIPBase):
 class FacetsResponse(IIPBase):
     cities: list[City]
     genres: list[IIPGenre]
+    languages: list[Language]
     materials: list[IIPMaterial]
     physical_types: list[IIPForm]
     provenances: list[Provenance]

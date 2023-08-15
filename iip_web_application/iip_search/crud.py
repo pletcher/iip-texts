@@ -60,6 +60,7 @@ def list_religions(db: Session):
 def list_facets(db: Session):
     cities = list_cities(db)
     genres = list_genres(db)
+    languages = list_languages(db)
     materials = list_materials(db)
     physical_types = list_forms(db)
     provenances = list_provenances(db)
@@ -69,6 +70,7 @@ def list_facets(db: Session):
     return dict(
         cities=cities,
         genres=genres,
+        languages=languages,
         materials=materials,
         physical_types=physical_types,
         provenances=provenances,

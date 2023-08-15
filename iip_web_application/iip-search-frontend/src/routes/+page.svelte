@@ -1,4 +1,5 @@
 <script>
+	import CollapsibleList from '$lib/components/CollapsibleList.svelte';
 	import SearchMap from './SearchMap.svelte';
 
 	export let data;
@@ -148,31 +149,63 @@
 							<input type="checkbox" />
 							<div class="collapse-title font-medium">Location</div>
 							<div class="collapse-content">
-								<div>
-									<h2>City</h2>
-									<ul>
-										{#each data.cities as { id, placename, pleiades_ref }}
-											<li>
-												<div class="form-control">
-													<label class="label justify-start">
-														<input
-															class="checkbox"
-															id={`city-${id}`}
-															type="checkbox"
-															value={`city-${id}`}
-														/>
-														<span class="label-text ml-4">{placename}</span>
-														<a
-															class="cursor-pointer ml-4 text-stone-400 text-sm hover:underline"
-															target="_blank"
-															href={pleiades_ref}>More info</a
-														>
-													</label>
-												</div>
-											</li>
-										{/each}
-									</ul>
+								<div class="border border-stone-300 p-4 rounded mb-2">
+									<h2 class="mb-2 font-semibold">City</h2>
+									<CollapsibleList items={data.cities} let:item={city}>
+										<div class="form-control">
+											<label class="label justify-start">
+												<input
+													class="checkbox"
+													id={`city-${city.id}`}
+													type="checkbox"
+													value={city.id}
+												/>
+												<span class="label-text ml-4">{city.placename}</span>
+												<a
+													class="cursor-pointer ml-4 text-stone-400 text-sm hover:underline"
+													target="_blank"
+													href={city.pleiades_ref}>More info</a
+												>
+											</label>
+										</div>
+									</CollapsibleList>
 								</div>
+
+								<div class="border border-stone-300 p-4 rounded mb-2">
+									<h2 class="mb-2 font-semibold">Provenance</h2>
+									<CollapsibleList items={data.provenances} let:item={provenance}>
+										<div class="form-control">
+											<label class="label justify-start">
+												<input
+													class="checkbox"
+													id={`provenance-${provenance.id}`}
+													type="checkbox"
+													value={provenance.id}
+												/>
+												<span class="label-text ml-4">{provenance.placename}</span>
+											</label>
+										</div>
+									</CollapsibleList>
+								</div>
+
+								{#if data.regions && data.regions.length > 0}
+									<div class="border border-stone-300 p-4 rounded">
+										<h2 class="mb-2 font-semibold">Region</h2>
+										<CollapsibleList items={data.regions} let:item={region}>
+											<div class="form-control">
+												<label class="label justify-start">
+													<input
+														class="checkbox"
+														id={`region-${region.id}`}
+														type="checkbox"
+														value={region.id}
+													/>
+													<span class="label-text ml-4">{region.placename}</span>
+												</label>
+											</div>
+										</CollapsibleList>
+									</div>
+								{/if}
 							</div>
 						</div>
 						<div class="divider" />
@@ -180,7 +213,21 @@
 							<input type="checkbox" />
 							<div class="collapse-title font-medium">Type of Inscription</div>
 							<div class="collapse-content">
-								<p>hello</p>
+								<div class="border border-stone-300 p-4 rounded">
+									<CollapsibleList items={data.genres} let:item={genre}>
+										<div class="form-control">
+											<label class="label justify-start">
+												<input
+													class="checkbox"
+													id={`genre-${genre.id}`}
+													type="checkbox"
+													value={genre.id}
+												/>
+												<span class="label-text ml-4">{genre.description || genre.xml_id}</span>
+											</label>
+										</div>
+									</CollapsibleList>
+								</div>
 							</div>
 						</div>
 						<div class="divider" />
@@ -189,7 +236,21 @@
 							<input type="checkbox" />
 							<div class="collapse-title font-medium">Physical Type</div>
 							<div class="collapse-content">
-								<p>hello</p>
+								<div class="border border-stone-300 p-4 rounded">
+									<CollapsibleList items={data.physical_types} let:item={physical_type}>
+										<div class="form-control">
+											<label class="label justify-start">
+												<input
+													class="checkbox"
+													id={`physical_type-${physical_type.id}`}
+													type="checkbox"
+													value={physical_type.id}
+												/>
+												<span class="label-text ml-4">{physical_type.description || physical_type.xml_id}</span>
+											</label>
+										</div>
+									</CollapsibleList>
+								</div>
 							</div>
 						</div>
 						<div class="divider" />
@@ -198,7 +259,21 @@
 							<input type="checkbox" />
 							<div class="collapse-title font-medium">Language</div>
 							<div class="collapse-content">
-								<p>hello</p>
+								<div class="border border-stone-300 p-4 rounded">
+									<CollapsibleList items={data.languages} let:item={language}>
+										<div class="form-control">
+											<label class="label justify-start">
+												<input
+													class="checkbox"
+													id={`language-${language.id}`}
+													type="checkbox"
+													value={language.id}
+												/>
+												<span class="label-text ml-4">{language.label || language.short_form}</span>
+											</label>
+										</div>
+									</CollapsibleList>
+								</div>
 							</div>
 						</div>
 						<div class="divider" />
@@ -207,7 +282,21 @@
 							<input type="checkbox" />
 							<div class="collapse-title font-medium">Religion</div>
 							<div class="collapse-content">
-								<p>hello</p>
+								<div class="border border-stone-300 p-4 rounded">
+									<CollapsibleList items={data.religions} let:item={religion}>
+										<div class="form-control">
+											<label class="label justify-start">
+												<input
+													class="checkbox"
+													id={`religion-${religion.id}`}
+													type="checkbox"
+													value={religion.id}
+												/>
+												<span class="label-text ml-4">{religion.description || religion.xml_id}</span>
+											</label>
+										</div>
+									</CollapsibleList>
+								</div>
 							</div>
 						</div>
 						<div class="divider" />
@@ -216,7 +305,21 @@
 							<input type="checkbox" />
 							<div class="collapse-title font-medium">Material</div>
 							<div class="collapse-content">
-								<p>hello</p>
+								<div class="border border-stone-300 p-4 rounded">
+									<CollapsibleList items={data.materials} let:item={material}>
+										<div class="form-control">
+											<label class="label justify-start">
+												<input
+													class="checkbox"
+													id={`material-${material.id}`}
+													type="checkbox"
+													value={material.id}
+												/>
+												<span class="label-text ml-4">{material.description || material.xml_id}</span>
+											</label>
+										</div>
+									</CollapsibleList>
+								</div>
 							</div>
 						</div>
 					</div>
