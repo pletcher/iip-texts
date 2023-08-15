@@ -57,6 +57,26 @@ def list_religions(db: Session):
     return db.query(models.IIPReligion).all()
 
 
+def list_facets(db: Session):
+    cities = list_cities(db)
+    genres = list_genres(db)
+    materials = list_materials(db)
+    physical_types = list_forms(db)
+    provenances = list_provenances(db)
+    regions = list_regions(db)
+    religions = list_religions(db)
+
+    return dict(
+        cities=cities,
+        genres=genres,
+        materials=materials,
+        physical_types=physical_types,
+        provenances=provenances,
+        regions=regions,
+        religions=religions,
+    )
+
+
 def search_inscriptions(db: Session, input_str: str):
     normalized_string = remove_accents(search)
     stmt = (

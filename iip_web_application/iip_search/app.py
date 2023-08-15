@@ -67,6 +67,21 @@ def search(search: str | None = None, db: Session = Depends(get_db)):
     return crud.search_inscriptions(db, search)
 
 
+@app.get("/facets", response_model=schemas.FacetsResponse)
+def facets(db: Session = Depends(get_db)):
+    return crud.list_facets(db)
+
+
 @app.get("/inscriptions", response_model=list[schemas.InscriptionResponse])
 def list_inscriptions(db: Session = Depends(get_db)):
     return crud.list_inscriptions(db)
+
+
+@app.get("/languages", response_model=list[schemas.Language])
+def list_languages(db: Session = Depends(get_db)):
+    return crud.list_languages(db)
+
+
+@app.get("/locations", response_model=list[schemas.Location])
+def list_locations(db: Session = Depends(get_db)):
+    return crud.list_locations(db)

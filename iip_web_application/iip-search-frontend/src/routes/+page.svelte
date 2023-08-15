@@ -1,11 +1,11 @@
 <script>
 	import SearchMap from './SearchMap.svelte';
+
+	export let data;
 </script>
 
 <div>
-	<!-- Static sidebar for desktop -->
-	<div class="fixed inset-y-0 z-50 flex w-72 flex-col">
-		<!-- Sidebar component, swap this element with another sidebar if you like -->
+	<div class="fixed inset-y-0 z-50 flex w-96 flex-col">
 		<div class="flex grow flex-col gap-y-5 overflow-y-auto bg-secondary px-6 pb-4">
 			<div class="flex h-24 shrink-0 items-center">
 				<img
@@ -14,8 +14,8 @@
 					alt="Inscriptions from Israel and Palestine"
 				/>
 			</div>
-			<form>
-				<div class="">
+			<form class="min-w-full">
+				<div>
 					<div class="border-b border-gray-900/10 pb-12">
 						<h2 class="font-semibold underline leading-7 hover:text-neutral-500">
 							<a href="//www.inscriptionsisraelpalestine.org/guide-to-searching/"
@@ -148,7 +148,31 @@
 							<input type="checkbox" />
 							<div class="collapse-title font-medium">Location</div>
 							<div class="collapse-content">
-								<p>hello</p>
+								<div>
+									<h2>City</h2>
+									<ul>
+										{#each data.cities as { id, placename, pleiades_ref }}
+											<li>
+												<div class="form-control">
+													<label class="label justify-start">
+														<input
+															class="checkbox"
+															id={`city-${id}`}
+															type="checkbox"
+															value={`city-${id}`}
+														/>
+														<span class="label-text ml-4">{placename}</span>
+														<a
+															class="cursor-pointer ml-4 text-stone-400 text-sm hover:underline"
+															target="_blank"
+															href={pleiades_ref}>More info</a
+														>
+													</label>
+												</div>
+											</li>
+										{/each}
+									</ul>
+								</div>
 							</div>
 						</div>
 						<div class="divider" />

@@ -86,6 +86,12 @@ class IIPGenre(IIPBase):
     xml_id: str
 
 
+class IIPMaterial(IIPBase):
+    id: int
+    description: Optional[str]
+    xml_id: str
+
+
 class IIPReligion(IIPBase):
     id: int
     description: Optional[str]
@@ -96,6 +102,14 @@ class Language(IIPBase):
     id: int
     label: str
     short_form: str
+
+
+class Location(IIPBase):
+    id: int
+    description: Optional[str]
+    label: Optional[str]
+    placename: str
+    pleiades_ref: Optional[str]
 
 
 class InscriptionResponse(IIPBase):
@@ -110,3 +124,13 @@ class InscriptionResponse(IIPBase):
     not_before: Optional[str]
     short_description: Optional[str]
     title: Optional[str]
+
+
+class FacetsResponse(IIPBase):
+    cities: list[City]
+    genres: list[IIPGenre]
+    materials: list[IIPMaterial]
+    physical_types: list[IIPForm]
+    provenances: list[Provenance]
+    regions: list[Region]
+    religions: list[IIPReligion]
