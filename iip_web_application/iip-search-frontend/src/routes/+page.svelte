@@ -6,7 +6,7 @@
 </script>
 
 <div>
-	<div class="fixed top-16 max-h-full z-50 flex w-96 flex-col">
+	<div class="fixed top-24 max-h-full z-50 flex w-96 flex-col">
 		<div class="flex grow flex-col gap-y-5 overflow-y-auto bg-secondary px-6 py-4">
 			<form class="min-w-full">
 				<div>
@@ -322,8 +322,8 @@
 	</div>
 
 	<div>
-		<div class="sticky top-0 z-40 flex h-16 shrink-0 items-center bg-primary">
-			<div class="flex h-24 shrink-0 items-center">
+		<div class="sticky top-0 z-40 flex h-24 shrink-0 items-center bg-primary">
+			<div class="flex h-24 shrink-0 items-center p-4">
 				<img
 					class="h-16 w-auto"
 					src="img/iip_logo.jpg"
