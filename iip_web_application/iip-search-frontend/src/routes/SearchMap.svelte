@@ -1,5 +1,8 @@
 <script lang="ts">
 	import type { Inscription } from '$lib/types/inscription.type';
+	
+	// @ts-expect-error
+	import type { MapMouseEvent } from 'mapbox-gl';
 
 	// @ts-expect-error
 	import mapboxgl from 'mapbox-gl';
@@ -29,15 +32,108 @@
 
 	function convertToGeoJson(inscriptions: Inscription[]) {
 		return inscriptions.map((inscription) => {
-			const coordinates = inscription.location_coordinates as number[]
+			const coordinates = inscription.location_coordinates as number[];
 			return {
 				type: 'Feature',
-				properties: {},
+				properties: inscription,
 				geometry: {
 					type: 'Point',
-					coordinates: [coordinates[1], coordinates[0]],
+					coordinates: [coordinates[1], coordinates[0]]
 				}
 			};
+		});
+	}
+
+	const SOURCE_NAME = 'inscriptions';
+
+	function addClusterLayers(map: mapboxgl.Map, inscriptions: Inscription[]) {
+		map.addSource(SOURCE_NAME, {
+			type: 'geojson',
+			cluster: true,
+			clusterMaxZoom: 11,
+			clusterRadius: 50,
+			data: {
+				type: 'FeatureCollection',
+				features: convertToGeoJson(inscriptions)
+			}
+		});
+
+		map.addLayer({
+			id: 'clusters',
+			type: 'circle',
+			source: SOURCE_NAME,
+			filter: ['has', 'point_count'],
+			paint: {
+				// Use step expressions (https://docs.mapbox.com/mapbox-gl-js/style-spec/#expressions-step)
+				// with three steps to implement three types of circles:
+				//   * Blue, 20px circles when point count is less than 100
+				//   * Yellow, 30px circles when point count is between 100 and 750
+				//   * Pink, 40px circles when point count is greater than or equal to 750
+				'circle-color': ['step', ['get', 'point_count'], '#51bbd6', 100, '#f1f075', 750, '#f28cb1'],
+				'circle-radius': ['step', ['get', 'point_count'], 20, 100, 30, 750, 40]
+			}
+		});
+
+		map.addLayer({
+			id: 'cluster-count',
+			type: 'symbol',
+			source: SOURCE_NAME,
+			filter: ['has', 'point_count'],
+			layout: {
+				'text-field': ['get', 'point_count_abbreviated'],
+				'text-font': ['Arial Unicode MS Bold'],
+				'text-size': 12
+			}
+		});
+
+		map.addLayer({
+			id: 'unclustered-point',
+			type: 'circle',
+			source: SOURCE_NAME,
+			filter: ['!', ['has', 'point_count']],
+			paint: {
+				'circle-color': '#11b4da',
+				'circle-radius': 4,
+				'circle-stroke-width': 1,
+				'circle-stroke-color': '#fff'
+			}
+		});
+
+		// When a click event occurs on a feature in
+		// the unclustered-point layer, open a popup at
+		// the location of the feature, with
+		// description HTML from its properties.
+		map.on('click', 'unclustered-point', (e: MapMouseEvent) => {
+			const coordinates = e.features[0].geometry.coordinates.slice();
+			console.log(e.features[0].properties)
+			const mag = e.features[0].properties.mag;
+			const tsunami = e.features[0].properties.tsunami === 1 ? 'yes' : 'no';
+
+			// Ensure that if the map is zoomed out such that
+			// multiple copies of the feature are visible, the
+			// popup appears over the copy being pointed to.
+			while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+				coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+			}
+
+			new mapboxgl.Popup()
+				.setLngLat(coordinates)
+				.setHTML(`magnitude: ${mag}<br>Was there a tsunami?: ${tsunami}`)
+				.addTo(map);
+		});
+
+		map.on('mouseenter', 'clusters', () => {
+			map.getCanvas().style.cursor = 'pointer';
+		});
+		map.on('mouseleave', 'clusters', () => {
+			map.getCanvas().style.cursor = '';
+		});
+
+		map.on('mouseenter', 'unclustered-point', () => {
+			map.getCanvas().style.cursor = 'pointer';
+		});
+		map.on('mouseleave', 'unclustered-point', () => {
+			map.getCanvas().style.cursor = '';
 		});
 	}
 
@@ -51,33 +147,63 @@
 			Boolean(inscription.location_coordinates)
 		);
 
-		map.addSource('inscription_locations', {
-			type: 'geojson',
-			cluster: true,
-			clusterMaxZoom: 11,
-			clusterRadius: 50,
-			data: {
-				type: 'FeatureCollection',
-				features: convertToGeoJson(withCoords)
-			}
-		});
-
-		map.addLayer({
-			id: 'clusters',
-			type: 'circle',
-			source: 'inscription_locations',
-			filter: ['has', 'point_count'],
-			paint: {
-				// Use step expressions (https://docs.mapbox.com/mapbox-gl-js/style-spec/#expressions-step)
-				// with three steps to implement three types of circles:
-				//   * Blue, 20px circles when point count is less than 100
-				//   * Yellow, 30px circles when point count is between 100 and 750
-				//   * Pink, 40px circles when point count is greater than or equal to 750
-				'circle-color': ['step', ['get', 'point_count'], '#51bbd6', 100, '#f1f075', 750, '#f28cb1'],
-				'circle-radius': ['step', ['get', 'point_count'], 20, 100, 30, 750, 40]
-			}
-		});
+		addClusterLayers(map, withCoords);
 	});
+
+	/* borrowed from iip-production/iip_smr_web_app/static/iip_search_app/mapsearch/mapsearch.js
+	// OVERLAYS
+
+var roman_provinces;
+var roman_roads;
+var byzantine_provinces_400CE;
+var iip_regions;
+var king_herod_boundaries_37BCE;
+
+// ajax call for getting overlay data
+$.ajax({
+  dataType: "json",
+  url: "load_layers",
+  success: function (data) {
+
+    var provinces = JSON.parse(data.roman_provinces);
+    roman_provinces = new L.geoJSON(provinces, { color: 'olive', weight: 1, onEachFeature: onEachRomanProvince });
+
+    var roads = JSON.parse(data.roman_roads);
+    roman_roads = new L.geoJSON(roads, { style: getWeight });
+
+    var byzantine = JSON.parse(data.byzantine_provinces_400CE);
+    byzantine_provinces_400CE = new L.geoJSON(byzantine, { color: 'gray', weight: 1, onEachFeature: onEachByzantine });
+
+    var iip = JSON.parse(data.iip_regions);
+    iip_regions = new L.geoJSON(iip, { color: 'navy', weight: 1, onEachFeature: onEachIIP });
+
+    var king_herod = JSON.parse(data.king_herod);
+    king_herod_boundaries_37BCE = new L.geoJSON(king_herod, { color: 'brown', weight: 1, onEachFeature: onEachKingHerod });
+  }
+});
+
+
+// FUNCTION FOR CHANGING ROAD WEIGHTS
+var getWeight = function (road) {
+  var line_weight;
+  var dash_array;
+  var color;
+
+  if (road.properties.Major_or_M === "0") {
+    line_weight = 1;
+  } else {
+    line_weight = 2;
+  }
+
+  if (road.properties.Known_or_a) {
+    dash_array = null;
+  } else {
+    dash_array = '1 5';
+  }
+
+  return { weight: line_weight, dashArray: dash_array, color: 'maroon' }
+}
+	*/
 </script>
 
 <div class="fixed bottom-0 right-0 h-full w-full bg-theme-700 text-white" id="search_map" />

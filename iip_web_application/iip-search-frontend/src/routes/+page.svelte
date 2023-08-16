@@ -6,15 +6,8 @@
 </script>
 
 <div>
-	<div class="fixed inset-y-0 z-50 flex w-96 flex-col">
-		<div class="flex grow flex-col gap-y-5 overflow-y-auto bg-secondary px-6 pb-4">
-			<div class="flex h-24 shrink-0 items-center">
-				<img
-					class="h-16 pt-1 w-auto"
-					src="img/iip_logo.jpg"
-					alt="Inscriptions from Israel and Palestine"
-				/>
-			</div>
+	<div class="fixed top-16 max-h-full z-50 flex w-96 flex-col">
+		<div class="flex grow flex-col gap-y-5 overflow-y-auto bg-secondary px-6 py-4">
 			<form class="min-w-full">
 				<div>
 					<div class="border-b border-gray-900/10 pb-12">
@@ -33,7 +26,7 @@
 									type="text"
 									name="text_search"
 									id="text_search"
-									class="input input-bordered input-primary bg-white w-full max-w-xs"
+									class="input input-bordered input-primary bg-white w-full max-w-xs rounded-none"
 									placeholder="λόγος καὶ ἔργα"
 								/>
 							</div>
@@ -46,7 +39,7 @@
 									type="text"
 									name="description_place_id"
 									id="description_place_id"
-									class="input input-bordered input-primary bg-white w-full max-w-xs"
+									class="input input-bordered input-primary bg-white w-full max-w-xs rounded-none"
 									placeholder="Egypt"
 								/>
 							</div>
@@ -60,7 +53,7 @@
 									type="text"
 									name="figures"
 									id="figures"
-									class="input input-bordered input-primary bg-white w-full max-w-xs"
+									class="input input-bordered input-primary bg-white w-full max-w-xs rounded-none"
 									placeholder="grapevine"
 								/>
 							</div>
@@ -75,14 +68,14 @@
 										max="2000"
 										step="1"
 										id="not_before"
-										class="input input-bordered input-primary bg-white"
+										class="input input-bordered input-primary bg-white w-24 rounded-none"
 										placeholder="-323"
 									/>
 									<div class="form-control">
 										<label class="label" for="not_before_era_0"
 											><input
 												type="radio"
-												class="radio"
+												class="radio h-4 w-4 mr-1"
 												name="not_before_era"
 												id="not_before_era_0"
 												checked
@@ -94,7 +87,7 @@
 										<label class="label" for="not_before_era_1"
 											><input
 												type="radio"
-												class="radio"
+												class="radio h-4 w-4 mr-1"
 												name="not_before_era"
 												id="not_before_era_1"
 											/>
@@ -114,14 +107,14 @@
 										max="2000"
 										step="1"
 										id="not_after"
-										class="input input-bordered input-primary bg-white"
+										class="input input-bordered input-primary bg-white w-24 rounded-none"
 										placeholder="330"
 									/>
 									<div class="form-control">
 										<label class="label" for="not_after_era_0"
 											><input
 												type="radio"
-												class="radio"
+												class="radio h-4 w-4 mr-1"
 												name="not_after_era"
 												id="not_after_era_0"
 												checked
@@ -133,7 +126,7 @@
 										<label class="label" for="not_after_era_1"
 											><input
 												type="radio"
-												class="radio"
+												class="radio h-4 w-4 mr-1"
 												name="not_after_era"
 												id="not_after_era_1"
 											/>
@@ -155,7 +148,7 @@
 										<div class="form-control">
 											<label class="label justify-start">
 												<input
-													class="checkbox"
+													class="checkbox rounded-none h-4 w-4"
 													id={`city-${city.id}`}
 													type="checkbox"
 													value={city.id}
@@ -177,7 +170,7 @@
 										<div class="form-control">
 											<label class="label justify-start">
 												<input
-													class="checkbox"
+													class="checkbox rounded-none h-4 w-4"
 													id={`provenance-${provenance.id}`}
 													type="checkbox"
 													value={provenance.id}
@@ -195,7 +188,7 @@
 											<div class="form-control">
 												<label class="label justify-start">
 													<input
-														class="checkbox"
+														class="checkbox rounded-none h-4 w-4"
 														id={`region-${region.id}`}
 														type="checkbox"
 														value={region.id}
@@ -218,7 +211,7 @@
 										<div class="form-control">
 											<label class="label justify-start">
 												<input
-													class="checkbox"
+													class="checkbox rounded-none h-4 w-4"
 													id={`genre-${genre.id}`}
 													type="checkbox"
 													value={genre.id}
@@ -241,7 +234,7 @@
 										<div class="form-control">
 											<label class="label justify-start">
 												<input
-													class="checkbox"
+													class="checkbox rounded-none h-4 w-4"
 													id={`physical_type-${physical_type.id}`}
 													type="checkbox"
 													value={physical_type.id}
@@ -264,7 +257,7 @@
 										<div class="form-control">
 											<label class="label justify-start">
 												<input
-													class="checkbox"
+													class="checkbox rounded-none h-4 w-4"
 													id={`language-${language.id}`}
 													type="checkbox"
 													value={language.id}
@@ -287,7 +280,7 @@
 										<div class="form-control">
 											<label class="label justify-start">
 												<input
-													class="checkbox"
+													class="checkbox rounded-none h-4 w-4"
 													id={`religion-${religion.id}`}
 													type="checkbox"
 													value={religion.id}
@@ -310,7 +303,7 @@
 										<div class="form-control">
 											<label class="label justify-start">
 												<input
-													class="checkbox"
+													class="checkbox rounded-none h-4 w-4"
 													id={`material-${material.id}`}
 													type="checkbox"
 													value={material.id}
@@ -328,8 +321,15 @@
 		</div>
 	</div>
 
-	<div class="lg:pl-72">
+	<div>
 		<div class="sticky top-0 z-40 flex h-16 shrink-0 items-center bg-primary">
+			<div class="flex h-24 shrink-0 items-center">
+				<img
+					class="h-16 w-auto"
+					src="img/iip_logo.jpg"
+					alt="Inscriptions from Israel and Palestine"
+				/>
+			</div>
 			<button type="button" class="-m-2.5 p-2.5 text-gray-700 lg:hidden">
 				<span class="sr-only">Open sidebar</span>
 				<svg
