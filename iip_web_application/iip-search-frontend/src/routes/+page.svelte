@@ -6,7 +6,7 @@
 </script>
 
 <div>
-	<div class="fixed top-24 max-h-full z-50 flex w-96 flex-col">
+	<div class="fixed top-24 max-h-full z-40 flex w-96 flex-col">
 		<div class="flex grow flex-col gap-y-5 overflow-y-auto bg-secondary px-6 py-4">
 			<form class="min-w-full">
 				<div>
@@ -239,7 +239,9 @@
 													type="checkbox"
 													value={physical_type.id}
 												/>
-												<span class="label-text ml-4">{physical_type.description || physical_type.xml_id}</span>
+												<span class="label-text ml-4"
+													>{physical_type.description || physical_type.xml_id}</span
+												>
 											</label>
 										</div>
 									</CollapsibleList>
@@ -285,7 +287,9 @@
 													type="checkbox"
 													value={religion.id}
 												/>
-												<span class="label-text ml-4">{religion.description || religion.xml_id}</span>
+												<span class="label-text ml-4"
+													>{religion.description || religion.xml_id}</span
+												>
 											</label>
 										</div>
 									</CollapsibleList>
@@ -308,7 +312,9 @@
 													type="checkbox"
 													value={material.id}
 												/>
-												<span class="label-text ml-4">{material.description || material.xml_id}</span>
+												<span class="label-text ml-4"
+													>{material.description || material.xml_id}</span
+												>
 											</label>
 										</div>
 									</CollapsibleList>
@@ -321,61 +327,10 @@
 		</div>
 	</div>
 
-	<div>
-		<div class="sticky top-0 z-40 flex h-24 shrink-0 items-center bg-primary">
-			<div class="flex h-24 shrink-0 items-center p-4">
-				<img
-					class="h-16 w-auto"
-					src="img/iip_logo.jpg"
-					alt="Inscriptions from Israel and Palestine"
-				/>
-			</div>
-			<button type="button" class="-m-2.5 p-2.5 text-gray-700 lg:hidden">
-				<span class="sr-only">Open sidebar</span>
-				<svg
-					class="h-6 w-6"
-					fill="none"
-					viewBox="0 0 24 24"
-					stroke-width="1.5"
-					stroke="currentColor"
-					aria-hidden="true"
-				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
-					/>
-				</svg>
-			</button>
-
-			<!-- Separator -->
-			<div class="h-6 w-px bg-gray-900/10 lg:hidden" aria-hidden="true" />
-
-			<div class="absolute right-0 flex space-x-10 pr-4 text-white">
-				<a
-					class="cursor-pointer hover:text-base-300 hover:underline"
-					href="//inscriptionsisraelpalestine.com/about">About</a
-				>
-				<a
-					class="cursor-pointer hover:text-base-300 hover:underline"
-					href="//inscriptionsisraelpalestine.com/about">Stories</a
-				>
-				<a
-					class="cursor-pointer hover:text-base-300 hover:underline"
-					href="//inscriptionsisraelpalestine.com/about">Resources</a
-				>
-				<a
-					class="cursor-pointer hover:text-base-300 hover:underline"
-					href="//inscriptionsisraelpalestine.com/about">Contact</a
-				>
-			</div>
+	<main class="py-10">
+		<div class="px-4 sm:px-6 lg:px-8">
+			<slot />
+			<SearchMap />
 		</div>
-
-		<main class="py-10">
-			<div class="px-4 sm:px-6 lg:px-8">
-				<slot />
-				<SearchMap />
-			</div>
-		</main>
-	</div>
+	</main>
 </div>

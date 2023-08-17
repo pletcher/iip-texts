@@ -6,6 +6,14 @@ def get_city(db: Session, city_id: int):
     return db.query(models.City).filter(models.City.id == city_id).one()
 
 
+def get_inscription(db: Session, slug: str):
+    return (
+        db.query(models.Inscription)
+        .filter(models.Inscription.filename == f"{slug}.xml")
+        .one()
+    )
+
+
 def get_provenance(db: Session, provenance_id: id):
     return (
         db.query(models.Provenance).filter(models.Provenance.id == provenance_id).one()

@@ -77,6 +77,11 @@ def list_inscriptions(db: Session = Depends(get_db)):
     return crud.list_inscriptions(db)
 
 
+@app.get("/inscriptions/{slug}", response_model=schemas.Inscription)
+def get_inscription(slug: str, db: Session = Depends(get_db)):
+    return crud.get_inscription(db, slug)
+
+
 @app.get("/languages", response_model=list[schemas.Language])
 def list_languages(db: Session = Depends(get_db)):
     return crud.list_languages(db)
