@@ -11,21 +11,22 @@
 		'Map data &copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://mapbox.com">Mapbox</a>';
 	const MAX_ZOOM = 11;
 
-	let map: mapboxgl.Map;
-
 	mapboxgl.accessToken = ACCESS_TOKEN;
+
+	export let inscriptions: Inscription[] = [];
+
+	let map: mapboxgl.Map;
 
 	function initializeMap() {
 		const map = new mapboxgl.Map({
+			customAttribution: ATTRIBUTION,
+			logoPosition: 'bottom-right',
 			container: 'search_map', // container ID
-			style: 'mapbox://styles/mapbox/satellite-v9', // style URL
-			center: [35.3, 31.3], // starting position [lng, lat]
-			zoom: 5 // starting zoom
+			style: 'mapbox://styles/mapbox/satellite-v9',
+			center: [35.3, 31.3], // starting position [lng, lat],
+			maxZoom: MAX_ZOOM,
+			zoom: 5
 		});
-
-		const attribution = new mapboxgl.AttributionControl({ customAttribution: ATTRIBUTION });
-
-		map.addControl(attribution);
 
 		return map;
 	}
@@ -51,13 +52,6 @@
 		const coordinates = feature.geometry.coordinates.slice();
 
 		const properties = feature.properties as Inscription;
-
-		// // Ensure that if the map is zoomed out such that
-		// // multiple copies of the feature are visible, the
-		// // popup appears over the copy being pointed to.
-		// while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-		// 	coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-		// }
 
 		new mapboxgl.Popup()
 			.setLngLat(coordinates)
@@ -157,14 +151,13 @@
 	onMount(async () => {
 		map = initializeMap();
 
-		const response = await fetch('/inscriptions');
-		const inscriptions = await response.json();
-
 		const withCoords = inscriptions.filter((inscription: Inscription) =>
 			Boolean(inscription.location_coordinates)
 		);
 
-		addClusterLayers(map, withCoords);
+		map.on('load', () => {
+			addClusterLayers(map, withCoords);
+		});
 	});
 
 	onDestroy(() => {
