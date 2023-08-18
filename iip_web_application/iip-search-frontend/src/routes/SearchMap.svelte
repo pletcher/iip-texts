@@ -1,21 +1,17 @@
 <script lang="ts">
 	import type { Inscription } from '$lib/types/inscription.type';
-	
-	// @ts-expect-error
-	import type { MapMouseEvent } from 'mapbox-gl';
+	import type { MapLayerMouseEvent } from 'mapbox-gl';
 
-	// @ts-expect-error
 	import mapboxgl from 'mapbox-gl';
-	import { onMount } from 'svelte';
-
-	// importing the CSS breaks the map display
-	// import 'mapbox-gl/dist/mapbox-gl.css';
+	import { onDestroy, onMount } from 'svelte';
 
 	const ACCESS_TOKEN =
 		'pk.eyJ1IjoiZGs1OCIsImEiOiJjajQ4aHd2MXMwaTE0MndsYzZwaG1sdmszIn0.VFRnx3NR9gUFBKBWNhhdjw';
 	const ATTRIBUTION =
 		'Map data &copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://mapbox.com">Mapbox</a>';
 	const MAX_ZOOM = 11;
+
+	let map: mapboxgl.Map;
 
 	mapboxgl.accessToken = ACCESS_TOKEN;
 
@@ -26,6 +22,10 @@
 			center: [35.3, 31.3], // starting position [lng, lat]
 			zoom: 5 // starting zoom
 		});
+
+		const attribution = new mapboxgl.AttributionControl({ customAttribution: ATTRIBUTION });
+
+		map.addControl(attribution);
 
 		return map;
 	}
@@ -44,6 +44,39 @@
 		});
 	}
 
+	function handleUnclusteredClick(e: MapLayerMouseEvent) {
+		// @ts-expect-error
+		const feature = e.features[0];
+		// @ts-expect-error
+		const coordinates = feature.geometry.coordinates.slice();
+
+		const properties = feature.properties as Inscription;
+
+		// // Ensure that if the map is zoomed out such that
+		// // multiple copies of the feature are visible, the
+		// // popup appears over the copy being pointed to.
+		// while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+		// 	coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+		// }
+
+		new mapboxgl.Popup()
+			.setLngLat(coordinates)
+			.setHTML(
+				`
+					<article class="prose prose-stone prose-sm">
+						<h3>${properties.title}</h3>
+						<p>
+							${properties.description}
+						</p>
+						<p>
+							<a href="/inscriptions/${properties.filename.replace('.xml', '')}">View</a>
+						</p>
+					</article>
+					`
+			)
+			.addTo(map);
+	}
+
 	const SOURCE_NAME = 'inscriptions';
 
 	function addClusterLayers(map: mapboxgl.Map, inscriptions: Inscription[]) {
@@ -54,6 +87,7 @@
 			clusterRadius: 50,
 			data: {
 				type: 'FeatureCollection',
+				// @ts-expect-error
 				features: convertToGeoJson(inscriptions)
 			}
 		});
@@ -93,7 +127,7 @@
 			filter: ['!', ['has', 'point_count']],
 			paint: {
 				'circle-color': '#11b4da',
-				'circle-radius': 4,
+				'circle-radius': 8,
 				'circle-stroke-width': 1,
 				'circle-stroke-color': '#fff'
 			}
@@ -103,24 +137,7 @@
 		// the unclustered-point layer, open a popup at
 		// the location of the feature, with
 		// description HTML from its properties.
-		map.on('click', 'unclustered-point', (e: MapMouseEvent) => {
-			const coordinates = e.features[0].geometry.coordinates.slice();
-			console.log(e.features[0].properties)
-			const mag = e.features[0].properties.mag;
-			const tsunami = e.features[0].properties.tsunami === 1 ? 'yes' : 'no';
-
-			// Ensure that if the map is zoomed out such that
-			// multiple copies of the feature are visible, the
-			// popup appears over the copy being pointed to.
-			while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-				coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-			}
-
-			new mapboxgl.Popup()
-				.setLngLat(coordinates)
-				.setHTML(`magnitude: ${mag}<br>Was there a tsunami?: ${tsunami}`)
-				.addTo(map);
-		});
+		map.on('click', 'unclustered-point', handleUnclusteredClick);
 
 		map.on('mouseenter', 'clusters', () => {
 			map.getCanvas().style.cursor = 'pointer';
@@ -138,7 +155,7 @@
 	}
 
 	onMount(async () => {
-		const map = initializeMap();
+		map = initializeMap();
 
 		const response = await fetch('/inscriptions');
 		const inscriptions = await response.json();
@@ -148,6 +165,12 @@
 		);
 
 		addClusterLayers(map, withCoords);
+	});
+
+	onDestroy(() => {
+		if (map) {
+			map.remove();
+		}
 	});
 
 	/* borrowed from iip-production/iip_smr_web_app/static/iip_search_app/mapsearch/mapsearch.js
