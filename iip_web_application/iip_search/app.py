@@ -1,12 +1,18 @@
 # -*- coding: utf-8 -*-
+import logging
 import os
 import unicodedata
+
+from typing import Annotated
+from typing import Literal
 
 from fastapi import Depends
 from fastapi import FastAPI
 from fastapi import Request
+from fastapi import Query
 from fastapi import status
 from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
 from fastapi.exceptions import ResponseValidationError
 from fastapi.responses import JSONResponse
 
@@ -28,6 +34,16 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    exc_str = f"{exc}".replace("\n", " ").replace("   ", " ")
+    logging.error(request, exc_str)
+    content = {"status_code": 10422, "message": exc_str, "data": None}
+    return JSONResponse(
+        content=content, status_code=status.HTTP_422_UNPROCESSABLE_ENTITY
+    )
 
 
 @app.exception_handler(ResponseValidationError)
@@ -73,8 +89,40 @@ def facets(db: Session = Depends(get_db)):
 
 
 @app.get("/inscriptions", response_model=list[schemas.InscriptionResponse])
-def list_inscriptions(db: Session = Depends(get_db)):
-    return crud.list_inscriptions(db)
+def list_inscriptions(
+    text_search: str | None = None,
+    description_place_id: str | None = None,
+    figures: str | None = None,
+    not_before: int | str | None = None,
+    not_before_era: Literal["bce"] | Literal["ce"] | None = None,
+    not_after: int | str | None = None,
+    not_after_era: Literal["bce"] | Literal["ce"] | None = None,
+    cities: Annotated[list[int] | None, Query()] = None,
+    provenances: Annotated[list[int] | None, Query()] = None,
+    genres: Annotated[list[int] | None, Query()] = None,
+    physical_types: Annotated[list[int] | None, Query()] = None,
+    languages: Annotated[list[int] | None, Query()] = None,
+    religions: Annotated[list[int] | None, Query()] = None,
+    materials: Annotated[list[int] | None, Query()] = None,
+    db: Session = Depends(get_db),
+):
+    return crud.list_inscriptions(
+        db,
+        text_search,
+        description_place_id,
+        figures,
+        not_before,
+        not_before_era,
+        not_after,
+        not_after_era,
+        cities,
+        provenances,
+        genres,
+        physical_types,
+        languages,
+        religions,
+        materials,
+    )
 
 
 @app.get("/inscriptions/{slug}", response_model=schemas.Inscription)

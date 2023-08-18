@@ -31,20 +31,6 @@
 		return map;
 	}
 
-	function convertToGeoJson(inscriptions: Inscription[]) {
-		return inscriptions.map((inscription) => {
-			const coordinates = inscription.location_coordinates as number[];
-			return {
-				type: 'Feature',
-				properties: inscription,
-				geometry: {
-					type: 'Point',
-					coordinates: [coordinates[1], coordinates[0]]
-				}
-			};
-		});
-	}
-
 	function handleUnclusteredClick(e: MapLayerMouseEvent) {
 		// @ts-expect-error
 		const feature = e.features[0];
@@ -73,21 +59,24 @@
 
 	const SOURCE_NAME = 'inscriptions';
 
-	function addClusterLayers(map: mapboxgl.Map, inscriptions: Inscription[]) {
+	function addSource(map: mapboxgl.Map, inscriptions: Inscription[]) {
 		map.addSource(SOURCE_NAME, {
 			type: 'geojson',
 			cluster: true,
 			clusterMaxZoom: 11,
 			clusterRadius: 50,
-			data: {
-				type: 'FeatureCollection',
-				// @ts-expect-error
-				features: convertToGeoJson(inscriptions)
-			}
+			// @ts-expect-error
+			data: formatData(inscriptions)
 		});
+	}
 
+	const CLUSTER_LAYER = 'clusters';
+	const CLUSTER_COUNT_LAYER = 'cluster-count';
+	const UNCLUSTERED_LAYER = 'unclustered-points';
+
+	function addClusterLayers(map: mapboxgl.Map) {
 		map.addLayer({
-			id: 'clusters',
+			id: CLUSTER_LAYER,
 			type: 'circle',
 			source: SOURCE_NAME,
 			filter: ['has', 'point_count'],
@@ -103,7 +92,7 @@
 		});
 
 		map.addLayer({
-			id: 'cluster-count',
+			id: CLUSTER_COUNT_LAYER,
 			type: 'symbol',
 			source: SOURCE_NAME,
 			filter: ['has', 'point_count'],
@@ -115,7 +104,7 @@
 		});
 
 		map.addLayer({
-			id: 'unclustered-point',
+			id: UNCLUSTERED_LAYER,
 			type: 'circle',
 			source: SOURCE_NAME,
 			filter: ['!', ['has', 'point_count']],
@@ -131,32 +120,75 @@
 		// the unclustered-point layer, open a popup at
 		// the location of the feature, with
 		// description HTML from its properties.
-		map.on('click', 'unclustered-point', handleUnclusteredClick);
+		map.on('click', UNCLUSTERED_LAYER, handleUnclusteredClick);
 
-		map.on('mouseenter', 'clusters', () => {
+		map.on('mouseenter', CLUSTER_LAYER, () => {
 			map.getCanvas().style.cursor = 'pointer';
 		});
-		map.on('mouseleave', 'clusters', () => {
+		map.on('mouseleave', CLUSTER_LAYER, () => {
 			map.getCanvas().style.cursor = '';
 		});
 
-		map.on('mouseenter', 'unclustered-point', () => {
+		map.on('mouseenter', UNCLUSTERED_LAYER, () => {
 			map.getCanvas().style.cursor = 'pointer';
 		});
-		map.on('mouseleave', 'unclustered-point', () => {
+		map.on('mouseleave', UNCLUSTERED_LAYER, () => {
 			map.getCanvas().style.cursor = '';
 		});
+	}
+
+	function removeLayers(map: mapboxgl.Map) {
+		if (map.getLayer(CLUSTER_LAYER)) {
+			map.removeLayer(CLUSTER_LAYER);
+		}
+
+		if (map.getLayer(CLUSTER_COUNT_LAYER)) {
+			map.removeLayer(CLUSTER_LAYER);
+		}
+
+		if (map.getLayer(UNCLUSTERED_LAYER)) {
+			map.removeLayer(UNCLUSTERED_LAYER);
+		}
+	}
+
+	function removeSources(map: mapboxgl.Map) {
+		if (map.getSource(SOURCE_NAME)) {
+			map.removeSource(SOURCE_NAME);
+		}
+	}
+
+	function convertToGeoJson(inscriptions: Inscription[]) {
+		return inscriptions.filter(hasCoords).map((inscription) => {
+			const coordinates = inscription.location_coordinates as number[];
+			return {
+				type: 'Feature',
+				properties: inscription,
+				geometry: {
+					type: 'Point',
+					coordinates: [coordinates[1], coordinates[0]]
+				}
+			};
+		});
+	}
+
+
+	function formatData(inscriptions: Inscription[]) {
+		return {
+			type: 'FeatureCollection',
+			features: convertToGeoJson(inscriptions)
+		};
+	}
+
+	function hasCoords(inscription: Inscription) {
+		return Boolean(inscription.location_coordinates);
 	}
 
 	onMount(async () => {
 		map = initializeMap();
 
-		const withCoords = inscriptions.filter((inscription: Inscription) =>
-			Boolean(inscription.location_coordinates)
-		);
-
 		map.on('load', () => {
-			addClusterLayers(map, withCoords);
+			addSource(map, inscriptions);
+			addClusterLayers(map);
 		});
 	});
 
@@ -165,6 +197,13 @@
 			map.remove();
 		}
 	});
+
+	$: {
+		if (map && map.loaded()) {
+			// @ts-expect-error
+			map.getSource(SOURCE_NAME).setData(formatData(inscriptions));
+		}
+	}
 
 	/* borrowed from iip-production/iip_smr_web_app/static/iip_search_app/mapsearch/mapsearch.js
 	// OVERLAYS
@@ -222,4 +261,4 @@ var getWeight = function (road) {
 	*/
 </script>
 
-<div class="fixed bottom-0 right-0 h-full w-full bg-theme-700 text-white" id="search_map" />
+<div class="fixed bottom-0 right-0 h-full w-full left-96 bg-theme-700 text-white" id="search_map" />

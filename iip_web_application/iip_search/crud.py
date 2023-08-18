@@ -1,3 +1,5 @@
+from typing import Literal
+
 from sqlalchemy.orm import Session
 from iip_search import models
 
@@ -103,12 +105,52 @@ def search_inscriptions(db: Session, input_str: str):
     return db.execute(stmt).scalars()
 
 
-def list_inscriptions(db: Session):
-    return (
+def list_inscriptions(
+    db: Session,
+    text_search: str | None = None,
+    description_place_id: str | None = None,
+    figures: str | None = None,
+    not_before: int | None = None,
+    not_before_era: Literal["bce"] | Literal["ce"] | None = None,
+    not_after: int | None = None,
+    not_after_era: Literal["bce"] | Literal["ce"] | None = None,
+    cities: list[int] | None = [],
+    provenances: list[int] | None = [],
+    genres: list[int] | None = [],
+    physical_types: list[int] | None = [],
+    languages: list[int] | None = [],
+    religions: list[int] | None = [],
+    materials: list[int] | None = [],
+):
+    query = (
         db.query(models.Inscription)
         .filter(models.Inscription.display_status == models.DisplayStatus.APPROVED)
-        .all()
+        .distinct(models.Inscription.id)
     )
+
+    if not_before is not None and not_before != "":
+        if not_before_era == "bce":
+            not_before = -not_before
+        query = query.filter(models.Inscription.not_before >= not_before)
+
+    if not_after is not None and not_after != "":
+        if not_after_era == "bce":
+            not_after = -not_after
+        query = query.filter(models.Inscription.not_after <= not_after)
+
+    if cities is not None and len(cities) > 0:
+        query = query.filter(models.Inscription.city_id.in_(cities))
+
+    if provenances is not None and len(provenances) > 0:
+        query = query.filter(models.Inscription.provenance_id.in_(provenances))
+
+    # if len(genres) > 0:
+    #     query = query.filter(models.Inscription.iip_genres)
+
+    # if len(physical_types) > 0:
+    #     query = query.filter(models.Inscription.iip_forms)
+
+    return query.all()
 
 
 def remove_accents(input_str):
