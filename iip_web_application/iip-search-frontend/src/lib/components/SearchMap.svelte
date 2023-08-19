@@ -4,6 +4,7 @@
 
 	import mapboxgl from 'mapbox-gl';
 	import { onDestroy, onMount } from 'svelte';
+	import MapOverlays from './MapOverlays.svelte';
 
 	const ACCESS_TOKEN =
 		'pk.eyJ1IjoiZGs1OCIsImEiOiJjajQ4aHd2MXMwaTE0MndsYzZwaG1sdmszIn0.VFRnx3NR9gUFBKBWNhhdjw';
@@ -15,15 +16,18 @@
 
 	export let inscriptions: Inscription[] = [];
 
+	let lng: number = 35.3;
+	let lat: number = 31.3;
 	let map: mapboxgl.Map;
+	let mapContainer: HTMLElement;
 
 	function initializeMap() {
 		const map = new mapboxgl.Map({
 			customAttribution: ATTRIBUTION,
 			logoPosition: 'bottom-right',
-			container: 'search_map', // container ID
+			container: mapContainer,
 			style: 'mapbox://styles/mapbox/satellite-v9',
-			center: [35.3, 31.3], // starting position [lng, lat],
+			center: [lng, lat],
 			maxZoom: MAX_ZOOM,
 			zoom: 5
 		});
@@ -189,6 +193,7 @@
 		map.on('load', () => {
 			addSource(map, inscriptions);
 			addClusterLayers(map);
+			// addOverlays(map);
 		});
 	});
 
@@ -261,4 +266,9 @@ var getWeight = function (road) {
 	*/
 </script>
 
-<div class="fixed bottom-0 right-0 h-full w-full left-96 bg-theme-700 text-white" id="search_map" />
+<div>
+	<div class="fixed bottom-0 right-0 h-full w-full left-96 bg-theme-700 text-white" bind:this={mapContainer} />
+	{#if map}
+		<MapOverlays map={map} />
+	{/if}
+</div>
