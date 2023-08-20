@@ -3,7 +3,7 @@
 </script>
 
 <div>
-	<div class="sticky top-0 z-50 flex h-24 shrink-0 items-center bg-primary">
+	<div class="fixed top-0 z-50 flex h-24 min-w-full shrink-0 items-center bg-primary">
 		<div class="flex h-24 shrink-0 items-center p-4">
 			<img
 				class="h-16 w-auto"

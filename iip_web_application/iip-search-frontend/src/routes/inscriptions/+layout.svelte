@@ -6,7 +6,7 @@
 	$: facets = data.facets;
 </script>
 
-<div>
+<div class="flex">
 	<div class="fixed top-24 h-full z-40 flex w-96 flex-col">
 		<div class="flex grow flex-col gap-y-5 overflow-y-scroll bg-secondary px-6 py-4">
 			<form class="min-w-full" action="?/inscriptions">

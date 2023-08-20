@@ -16,6 +16,9 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.exceptions import ResponseValidationError
 from fastapi.responses import JSONResponse
 
+from fastapi_pagination import Page, add_pagination
+from fastapi_pagination.ext.sqlalchemy import paginate
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -78,17 +81,12 @@ def heartbeat():
 # )`
 
 
-@app.get("/", response_model=list[schemas.InscriptionResponse])
-def search(search: str | None = None, db: Session = Depends(get_db)):
-    return crud.search_inscriptions(db, search)
-
-
 @app.get("/facets", response_model=schemas.FacetsResponse)
 def facets(db: Session = Depends(get_db)):
     return crud.list_facets(db)
 
 
-@app.get("/inscriptions", response_model=list[schemas.InscriptionResponse])
+@app.get("/inscriptions", response_model=Page[schemas.InscriptionListResponse])
 def list_inscriptions(
     text_search: str | None = None,
     description_place_id: str | None = None,
@@ -106,22 +104,64 @@ def list_inscriptions(
     materials: Annotated[list[int] | None, Query()] = None,
     db: Session = Depends(get_db),
 ):
-    return crud.list_inscriptions(
+    return paginate(
         db,
-        text_search,
-        description_place_id,
-        figures,
-        not_before,
-        not_before_era,
-        not_after,
-        not_after_era,
-        cities,
-        provenances,
-        genres,
-        physical_types,
-        languages,
-        religions,
-        materials,
+        crud.list_inscriptions(
+            db,
+            text_search,
+            description_place_id,
+            figures,
+            not_before,
+            not_before_era,
+            not_after,
+            not_after_era,
+            cities,
+            provenances,
+            genres,
+            physical_types,
+            languages,
+            religions,
+            materials,
+        ),
+    )
+
+
+@app.get("/map/inscriptions", response_model=list[schemas.InscriptionMapResponse])
+def list_inscriptions(
+    text_search: str | None = None,
+    description_place_id: str | None = None,
+    figures: str | None = None,
+    not_before: int | str | None = None,
+    not_before_era: Literal["bce"] | Literal["ce"] | None = None,
+    not_after: int | str | None = None,
+    not_after_era: Literal["bce"] | Literal["ce"] | None = None,
+    cities: Annotated[list[int] | None, Query()] = None,
+    provenances: Annotated[list[int] | None, Query()] = None,
+    genres: Annotated[list[int] | None, Query()] = None,
+    physical_types: Annotated[list[int] | None, Query()] = None,
+    languages: Annotated[list[int] | None, Query()] = None,
+    religions: Annotated[list[int] | None, Query()] = None,
+    materials: Annotated[list[int] | None, Query()] = None,
+    db: Session = Depends(get_db),
+):
+    return (
+        crud.list_inscriptions(
+            db,
+            text_search,
+            description_place_id,
+            figures,
+            not_before,
+            not_before_era,
+            not_after,
+            not_after_era,
+            cities,
+            provenances,
+            genres,
+            physical_types,
+            languages,
+            religions,
+            materials,
+        ),
     )
 
 
@@ -138,3 +178,6 @@ def list_languages(db: Session = Depends(get_db)):
 @app.get("/locations", response_model=list[schemas.Location])
 def list_locations(db: Session = Depends(get_db)):
     return crud.list_locations(db)
+
+
+add_pagination(app)

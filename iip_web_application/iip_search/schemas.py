@@ -112,12 +112,30 @@ class Location(IIPBase):
     pleiades_ref: Optional[str]
 
 
-class InscriptionResponse(IIPBase):
+class InscriptionMapResponse(IIPBase):
     id: int
     city: Optional[City]
     description: Optional[str]
     dimensions: Optional[dict]
     filename: str
+    images: Optional[List[Image]]
+    location_coordinates: Optional[List[float]]
+    location_metadata: Optional[dict]
+    not_after: Optional[str]
+    not_before: Optional[str]
+    short_description: Optional[str]
+    title: Optional[str]
+
+
+class InscriptionListResponse(IIPBase):
+    id: int
+    city: Optional[City]
+    description: Optional[str]
+    dimensions: Optional[dict]
+    editions: List[Edition]
+    filename: str
+    images: Optional[List[Image]]
+    languages: List[Language]
     location_coordinates: Optional[List[float]]
     location_metadata: Optional[dict]
     not_after: Optional[str]

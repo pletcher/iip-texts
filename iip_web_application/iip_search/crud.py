@@ -150,7 +150,7 @@ def list_inscriptions(
     # if len(physical_types) > 0:
     #     query = query.filter(models.Inscription.iip_forms)
 
-    return query.all()
+    return query
 
 
 def remove_accents(input_str):

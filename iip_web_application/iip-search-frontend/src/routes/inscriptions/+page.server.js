@@ -1,8 +1,10 @@
 import { PUBLIC_API_URL } from '$env/static/public'
 
+// @ts-ignore
 export async function load({ url }) {
     const inscriptionResponse = await fetch(`${PUBLIC_API_URL}/inscriptions${url.search}`);
-    const inscriptions = await inscriptionResponse.json();
+    const json = await inscriptionResponse.json();
+    const { items: inscriptions, page, pages } = json;
 
-    return { inscriptions };
+    return { inscriptions, page, pages };
 }
