@@ -7,6 +7,15 @@
 	export let currentPage: number = 1;
 	export let totalPages: number = 1;
 
+    function formatDate(inscription: Inscription) {
+        if (inscription.not_before === inscription.not_after) {
+            return parseDate(inscription.not_before);
+        }
+
+
+        return `Between ${parseDate(inscription.not_before)} and ${parseDate(inscription.not_after)}`
+    }
+
     function getEditionOfType(editions: Edition[], type: string) {
         if (editions.length === 0) {
 			return 'Not found';
@@ -68,7 +77,7 @@
 						</a>
 					</td>
 					<td>{(inscription.languages || []).map((language) => language.label).join(', ')}</td>
-					<td>{parseDate(inscription.not_before)} to {parseDate(inscription.not_after)}</td>
+					<td>{formatDate(inscription)}</td>
 					<td>{getTranscription(inscription)}</td>
 					<td>{getTranslation(inscription)}</td>
 				</tr>

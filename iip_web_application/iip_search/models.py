@@ -397,8 +397,8 @@ class Inscription(Base):
     location_metadata: Mapped[Optional[dict]] = mapped_column(
         MutableDict.as_mutable(JSONB)
     )
-    not_after: Mapped[Optional[str]]
-    not_before: Mapped[Optional[str]]
+    not_after: Mapped[Optional[int]]
+    not_before: Mapped[Optional[int]]
     parsed_at: Mapped[datetime.datetime]
     provenance_id = mapped_column(ForeignKey("provenances.id"), nullable=True)
     provenance: Mapped[Optional[Provenance]] = relationship(

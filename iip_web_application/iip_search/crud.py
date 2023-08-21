@@ -130,12 +130,12 @@ def list_inscriptions(
 
     if not_before is not None and not_before != "":
         if not_before_era == "bce":
-            not_before = -not_before
+            not_before = -int(not_before)
         query = query.filter(models.Inscription.not_before >= not_before)
 
     if not_after is not None and not_after != "":
         if not_after_era == "bce":
-            not_after = -not_after
+            not_after = -int(not_after)
         query = query.filter(models.Inscription.not_after <= not_after)
 
     if cities is not None and len(cities) > 0:

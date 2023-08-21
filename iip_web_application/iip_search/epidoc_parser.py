@@ -17,6 +17,8 @@ logging.basicConfig(format="%(levelname)s: %(asctime)s %(message)s", level=loggi
 
 whitespace_regex = re.compile(r"\s+")
 
+IMAGE_URL_PREFIX = "//github.com/Brown-University-Library/iip-images/raw/master"
+
 LANGUAGES = {
     "arc": {
         "label": "Aramaic",
@@ -291,7 +293,12 @@ class EpidocParser:
         )
 
         if main_image is not None:
-            images.append(dict(graphic_url=main_image.get("url")))
+            url = main_image.get("url")
+
+            if url != "":
+                images.append(
+                    dict(graphic_url=f"{IMAGE_URL_PREFIX}/{main_image.get('url')}")
+                )
 
         for image in self.tree.iterfind(
             "//tei:facsimile/tei:surface", namespaces=NAMESPACES
@@ -309,7 +316,10 @@ class EpidocParser:
 
                 if len(graphic_url) > 0:
                     images.append(
-                        dict(description=description, graphic_url=graphic_url)
+                        dict(
+                            description=description,
+                            graphic_url=f"{IMAGE_URL_PREFIX}/{graphic_url}",
+                        )
                     )
 
         return images
@@ -377,7 +387,10 @@ class EpidocParser:
         date = self.tree.find("//tei:origin/tei:date", namespaces=NAMESPACES)
 
         if date is not None:
-            return date.get("notBefore")
+            not_before = date.get("notBefore")
+
+            if not_before is not None:
+                return int(not_before)
 
         return None
 
@@ -385,7 +398,10 @@ class EpidocParser:
         date = self.tree.find("//tei:origin/tei:date", namespaces=NAMESPACES)
 
         if date is not None:
-            return date.get("notAfter")
+            not_after = date.get("notAfter")
+
+            if not_after is not None:
+                return int(not_after)
 
         return None
 

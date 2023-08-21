@@ -1,17 +1,22 @@
 <script>
+	import { page } from '$app/stores';
 	import CollapsibleList from '$lib/components/CollapsibleList.svelte';
 
 	export let data;
+
+	const searchParams = $page.url.searchParams;
+
+	console.log($page.form);
 
 	$: facets = data.facets;
 </script>
 
 <div class="flex">
-	<div class="fixed top-24 h-full z-40 flex w-96 flex-col">
-		<div class="flex grow flex-col gap-y-5 overflow-y-scroll bg-secondary px-6 py-4">
-			<form class="min-w-full" action="?/inscriptions">
+	<div class="flex w-96 flex-col h-full">
+		<div class="flex grow flex-col gap-y-5 bg-secondary px-6 py-4">
+			<form class="min-w-full" action="/inscriptions" data-sveltekit-keepfocus>
 				<div>
-					<div class="border-b border-gray-900/10 pb-12">
+					<div class="border-gray-900/10 pb-6">
 						<h2 class="font-semibold underline leading-7 hover:text-neutral-500">
 							<a href="//www.inscriptionsisraelpalestine.org/guide-to-searching/"
 								>Guide to Searching</a
@@ -334,14 +339,12 @@
 								</div>
 							</div>
 						</div>
-						<div class="pb-24">
-							<button class="btn btn-primary mt-8 rounded-none w-full">Search</button>
-						</div>
+						<button class="btn btn-primary mt-8 rounded-none w-full">Search</button>
 					</div>
 				</div>
 			</form>
 		</div>
 	</div>
 
-    <slot />
+	<slot />
 </div>

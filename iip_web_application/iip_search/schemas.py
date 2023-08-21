@@ -24,22 +24,6 @@ class Image(IIPBase):
     graphic_url: str
 
 
-class Inscription(IIPBase):
-    id: int
-    description: Optional[str]
-    dimensions: Optional[dict]
-    display_status: DisplayStatus
-    editions: List[Edition]
-    filename: str
-    images: List[Image]
-    location_coordinates: Optional[List[float]]
-    location_metadata: Optional[dict]
-    not_after: Optional[str]
-    not_before: Optional[str]
-    short_description: Optional[str]
-    title: Optional[str]
-
-
 class City(IIPBase):
     id: int
     placename: str
@@ -98,6 +82,13 @@ class IIPReligion(IIPBase):
     xml_id: str
 
 
+class IIPWriting(IIPBase):
+    id: int
+    description: Optional[str]
+    note: Optional[str]
+    xml_id: str
+
+
 class Language(IIPBase):
     id: int
     label: str
@@ -112,38 +103,6 @@ class Location(IIPBase):
     pleiades_ref: Optional[str]
 
 
-class InscriptionMapResponse(IIPBase):
-    id: int
-    city: Optional[City]
-    description: Optional[str]
-    dimensions: Optional[dict]
-    filename: str
-    images: Optional[List[Image]]
-    location_coordinates: Optional[List[float]]
-    location_metadata: Optional[dict]
-    not_after: Optional[str]
-    not_before: Optional[str]
-    short_description: Optional[str]
-    title: Optional[str]
-
-
-class InscriptionListResponse(IIPBase):
-    id: int
-    city: Optional[City]
-    description: Optional[str]
-    dimensions: Optional[dict]
-    editions: List[Edition]
-    filename: str
-    images: Optional[List[Image]]
-    languages: List[Language]
-    location_coordinates: Optional[List[float]]
-    location_metadata: Optional[dict]
-    not_after: Optional[str]
-    not_before: Optional[str]
-    short_description: Optional[str]
-    title: Optional[str]
-
-
 class FacetsResponse(IIPBase):
     cities: list[City]
     genres: list[IIPGenre]
@@ -153,3 +112,42 @@ class FacetsResponse(IIPBase):
     provenances: list[Provenance]
     regions: list[Region]
     religions: list[IIPReligion]
+
+
+# InscriptionMapResponse performs minimal joins
+# for displaying all inscriptions on the map
+class InscriptionMapResponse(IIPBase):
+    id: int
+    city: Optional[City]
+    description: Optional[str]
+    dimensions: Optional[dict]
+    display_status: DisplayStatus
+    filename: str
+    location_coordinates: Optional[List[float]]
+    location_metadata: Optional[dict]
+    not_after: Optional[int]
+    not_before: Optional[int]
+    short_description: Optional[str]
+    title: Optional[str]
+
+
+# InscriptionListResponse adds a few additional join
+# queries because we're paginating these results
+class InscriptionListResponse(InscriptionMapResponse):
+    editions: List[Edition]
+    images: Optional[List[Image]]
+    languages: List[Language]
+
+
+# Inscription performs all of the joins on the Inscription model.
+# This schema should only be used for displaying an individual inscription.
+class Inscription(InscriptionListResponse):
+    bibliographic_entries: List[BibliographicEntry]
+    iip_forms: List[IIPForm]
+    iip_genres: List[IIPGenre]
+    iip_materials: List[IIPMaterial]
+    iip_preservation: IIPPreservation
+    iip_religions: List[IIPReligion]
+    iip_writings: List[IIPWriting]
+    provenance: Optional[Provenance]
+    region: Optional[Region]
