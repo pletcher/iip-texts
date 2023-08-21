@@ -1,14 +1,44 @@
-<script>
+<script lang="ts">
 	import { page } from '$app/stores';
-	import CollapsibleList from '$lib/components/CollapsibleList.svelte';
 
 	export let data;
 
 	const searchParams = $page.url.searchParams;
 
-	console.log($page.form);
-
 	$: facets = data.facets;
+	$: cities = searchParams.getAll('cities');
+	$: descriptionPlaceId = searchParams.get('description_place_id');
+	$: figures = searchParams.get('figures');
+	$: genres = searchParams.getAll('genres');
+	$: languages = searchParams.getAll('languages');
+	$: materials = searchParams.getAll('materials');
+	$: notAfter = searchParams.get('not_after') || 2023;
+	$: notAfterEra = searchParams.get('not_after_era');
+	$: notBefore = searchParams.get('not_before') || -2000;
+	$: notBeforeEra = searchParams.get('not_before_era');
+	$: physicalTypes = searchParams.getAll('physical_types');
+	$: provenances = searchParams.getAll('provenances');
+	$: regions = searchParams.getAll('regions');
+	$: religions = searchParams.getAll('religions');
+	$: textSearch = searchParams.get('text_search');
+
+	function reset(_e: Event) {
+		cities = [];
+		descriptionPlaceId = '';
+		figures = '';
+		genres = [];
+		languages = [];
+		materials = [];
+		notAfter = 500;
+		notAfterEra = 'ce';
+		notBefore = 2000;
+		notBeforeEra = 'bce';
+		physicalTypes = [];
+		provenances = [];
+		regions = [];
+		religions = [];
+		textSearch = '';
+	}
 </script>
 
 <div class="flex">
@@ -34,6 +64,7 @@
 									id="text_search"
 									class="input input-bordered input-primary bg-white w-full max-w-xs rounded-none"
 									placeholder="λόγος καὶ ἔργα"
+									bind:value={textSearch}
 								/>
 							</div>
 
@@ -47,6 +78,7 @@
 									id="description_place_id"
 									class="input input-bordered input-primary bg-white w-full max-w-xs rounded-none"
 									placeholder="Egypt"
+									bind:value={descriptionPlaceId}
 								/>
 							</div>
 
@@ -61,6 +93,7 @@
 									id="figures"
 									class="input input-bordered input-primary bg-white w-full max-w-xs rounded-none"
 									placeholder="grapevine"
+									bind:value={figures}
 								/>
 							</div>
 
@@ -71,11 +104,12 @@
 										type="number"
 										name="not_before"
 										min="-2000"
-										max="2000"
+										max="2023"
 										step="1"
 										id="not_before"
 										class="input input-bordered input-primary bg-white w-24 rounded-none"
 										placeholder="323"
+										bind:value={notBefore}
 									/>
 									<div class="form-control">
 										<label class="label" for="not_before_era_0"
@@ -85,7 +119,7 @@
 												name="not_before_era"
 												value="bce"
 												id="not_before_era_0"
-												checked
+												bind:group={notBeforeEra}
 											/>
 											<span class="label-text cursor-pointer">BCE</span></label
 										>
@@ -98,6 +132,7 @@
 												name="not_before_era"
 												value="ce"
 												id="not_before_era_1"
+												bind:group={notBeforeEra}
 											/>
 											<span class="label-text cursor-pointer">CE</span></label
 										>
@@ -112,11 +147,12 @@
 										type="number"
 										name="not_after"
 										min="-2000"
-										max="2000"
+										max="2023"
 										step="1"
 										id="not_after"
 										class="input input-bordered input-primary bg-white w-24 rounded-none"
-										placeholder="330"
+										placeholder="200"
+										bind:value={notAfter}
 									/>
 									<div class="form-control">
 										<label class="label" for="not_after_era_0"
@@ -126,7 +162,7 @@
 												name="not_after_era"
 												value="bce"
 												id="not_after_era_0"
-												checked
+												bind:group={notAfterEra}
 											/>
 											<span class="label-text cursor-pointer">BCE</span></label
 										>
@@ -139,6 +175,7 @@
 												name="not_after_era"
 												value="ce"
 												id="not_after_era_1"
+												bind:group={notAfterEra}
 											/>
 											<span class="label-text cursor-pointer">CE</span></label
 										>
@@ -148,79 +185,96 @@
 						</div>
 						<div class="divider" />
 
-						<div class="font-small collapse collapse-arrow">
+						<div
+							class={`font-small collapse collapse-arrow ${
+								cities.length > 0 || provenances.length > 0 ? 'collapse-open' : ''
+							}`}
+						>
 							<input type="checkbox" />
 							<div class="collapse-title font-medium">Location</div>
 							<div class="collapse-content">
 								<div class="border border-stone-300 p-4 rounded mb-2">
 									<h2 class="mb-2 font-semibold">City</h2>
-									<CollapsibleList items={facets.cities} let:item={city}>
-										<div class="form-control">
-											<label class="label justify-start">
-												<input
-													class="checkbox rounded-none h-4 w-4"
-													id={`city-${city.id}`}
-													type="checkbox"
-													name="cities"
-													value={city.id}
-												/>
-												<span class="label-text ml-4">{city.placename}</span>
-												<a
-													class="cursor-pointer ml-4 text-stone-400 text-sm hover:underline"
-													target="_blank"
-													href={city.pleiades_ref}>More info</a
-												>
-											</label>
-										</div>
-									</CollapsibleList>
+									<div class="h-48 overflow-y-auto">
+										{#each facets.cities as city}
+											<div class="form-control">
+												<label class="label justify-start">
+													<input
+														class="checkbox rounded-none h-4 w-4"
+														id={`city-${city.id}`}
+														type="checkbox"
+														name="cities"
+														value={city.id.toString()}
+														bind:group={cities}
+													/>
+													<span class="label-text ml-4">{city.placename}</span>
+													<a
+														class="cursor-pointer ml-4 text-stone-400 text-sm hover:underline"
+														target="_blank"
+														href={city.pleiades_ref}>More info</a
+													>
+												</label>
+											</div>
+										{/each}
+									</div>
 								</div>
 
 								<div class="border border-stone-300 p-4 rounded mb-2">
 									<h2 class="mb-2 font-semibold">Provenance</h2>
-									<CollapsibleList items={facets.provenances} let:item={provenance}>
-										<div class="form-control">
-											<label class="label justify-start">
-												<input
-													class="checkbox rounded-none h-4 w-4"
-													id={`provenance-${provenance.id}`}
-													type="checkbox"
-													name="provenances"
-													value={provenance.id}
-												/>
-												<span class="label-text ml-4">{provenance.placename}</span>
-											</label>
-										</div>
-									</CollapsibleList>
+									<div class="h-48 overflow-y-auto">
+										{#each facets.provenances as provenance}
+											<div class="form-control">
+												<label class="label justify-start">
+													<input
+														class="checkbox rounded-none h-4 w-4"
+														id={`provenance-${provenance.id}`}
+														type="checkbox"
+														name="provenances"
+														value={provenance.id.toString()}
+														bind:group={provenances}
+													/>
+													<span class="label-text ml-4">{provenance.placename}</span>
+												</label>
+											</div>
+										{/each}
+									</div>
 								</div>
 
 								{#if facets.regions && facets.regions.length > 0}
 									<div class="border border-stone-300 p-4 rounded">
 										<h2 class="mb-2 font-semibold">Region</h2>
-										<CollapsibleList items={facets.regions} let:item={region}>
-											<div class="form-control">
-												<label class="label justify-start">
-													<input
-														class="checkbox rounded-none h-4 w-4"
-														id={`region-${region.id}`}
-														type="checkbox"
-														name="regions"
-														value={region.id}
-													/>
-													<span class="label-text ml-4">{region.placename}</span>
-												</label>
-											</div>
-										</CollapsibleList>
+										<div class="h-48 overflow-y-auto">
+											{#each facets.regions as region}
+												<div class="form-control">
+													<label class="label justify-start">
+														<input
+															class="checkbox rounded-none h-4 w-4"
+															id={`region-${region.id}`}
+															type="checkbox"
+															name="regions"
+															value={region.id.toString()}
+															bind:group={regions}
+														/>
+														<span class="label-text ml-4">{region.placename}</span>
+													</label>
+												</div>
+											{/each}
+										</div>
 									</div>
 								{/if}
 							</div>
 						</div>
 						<div class="divider" />
-						<div class="font-small collapse collapse-arrow">
+						<div
+							class={`font-small collapse collapse-arrow ${
+								genres.length > 0 ? 'collapse-open' : ''
+							}`}
+						>
 							<input type="checkbox" />
 							<div class="collapse-title font-medium">Type of Inscription</div>
 							<div class="collapse-content">
-								<div class="border border-stone-300 p-4 rounded">
-									<CollapsibleList items={facets.genres} let:item={genre}>
+								<div class="border border-stone-300 p-4 rounded h-48 overflow-y-auto">
+									{#each facets.genres as genre}
 										<div class="form-control">
 											<label class="label justify-start">
 												<input
@@ -228,49 +282,59 @@
 													id={`genre-${genre.id}`}
 													type="checkbox"
 													name="genres"
-													value={genre.id}
+													value={genre.id.toString()}
+													bind:group={genres}
 												/>
 												<span class="label-text ml-4">{genre.description || genre.xml_id}</span>
 											</label>
 										</div>
-									</CollapsibleList>
+									{/each}
 								</div>
 							</div>
 						</div>
 						<div class="divider" />
 
-						<div class="font-small collapse collapse-arrow">
+						<div
+							class={`font-small collapse collapse-arrow ${
+								physicalTypes.length > 0 ? 'collapse-open' : ''
+							}`}
+						>
 							<input type="checkbox" />
 							<div class="collapse-title font-medium">Physical Type</div>
 							<div class="collapse-content">
-								<div class="border border-stone-300 p-4 rounded">
-									<CollapsibleList items={facets.physical_types} let:item={physical_type}>
+								<div class="border border-stone-300 p-4 rounded h-48 overflow-y-auto">
+									{#each facets.physical_types as physicalType}
 										<div class="form-control">
 											<label class="label justify-start">
 												<input
 													class="checkbox rounded-none h-4 w-4"
-													id={`physical_type-${physical_type.id}`}
+													id={`physical_type-${physicalType.id}`}
 													type="checkbox"
-													name="physical_types"
-													value={physical_type.id}
+													name="physicalTypes"
+													value={physicalType.id.toString()}
+													bind:group={physicalTypes}
 												/>
 												<span class="label-text ml-4"
-													>{physical_type.description || physical_type.xml_id}</span
+													>{physicalType.description || physicalType.xml_id}</span
 												>
 											</label>
 										</div>
-									</CollapsibleList>
+									{/each}
 								</div>
 							</div>
 						</div>
 						<div class="divider" />
 
-						<div class="font-small collapse collapse-arrow">
+						<div
+							class={`font-small collapse collapse-arrow ${
+								languages.length > 0 ? 'collapse-open' : ''
+							}`}
+						>
 							<input type="checkbox" />
 							<div class="collapse-title font-medium">Language</div>
 							<div class="collapse-content">
-								<div class="border border-stone-300 p-4 rounded">
-									<CollapsibleList items={facets.languages} let:item={language}>
+								<div class="border border-stone-300 p-4 rounded max-h-48 overflow-y-auto">
+									{#each facets.languages as language}
 										<div class="form-control">
 											<label class="label justify-start">
 												<input
@@ -278,23 +342,28 @@
 													id={`language-${language.id}`}
 													type="checkbox"
 													name="languages"
-													value={language.id}
+													value={language.id.toString()}
+													bind:group={languages}
 												/>
 												<span class="label-text ml-4">{language.label || language.short_form}</span>
 											</label>
 										</div>
-									</CollapsibleList>
+									{/each}
 								</div>
 							</div>
 						</div>
 						<div class="divider" />
 
-						<div class="font-small collapse collapse-arrow">
+						<div
+							class={`font-small collapse collapse-arrow ${
+								religions.length > 0 ? 'collapse-open' : ''
+							}`}
+						>
 							<input type="checkbox" />
 							<div class="collapse-title font-medium">Religion</div>
 							<div class="collapse-content">
 								<div class="border border-stone-300 p-4 rounded">
-									<CollapsibleList items={facets.religions} let:item={religion}>
+									{#each facets.religions as religion}
 										<div class="form-control">
 											<label class="label justify-start">
 												<input
@@ -302,25 +371,30 @@
 													id={`religion-${religion.id}`}
 													type="checkbox"
 													name="religions"
-													value={religion.id}
+													value={religion.id.toString()}
+													bind:group={religions}
 												/>
 												<span class="label-text ml-4"
 													>{religion.description || religion.xml_id}</span
 												>
 											</label>
 										</div>
-									</CollapsibleList>
+									{/each}
 								</div>
 							</div>
 						</div>
 						<div class="divider" />
 
-						<div class="font-small collapse collapse-arrow">
+						<div
+							class={`font-small collapse collapse-arrow ${
+								materials.length > 0 ? 'collapse-open' : ''
+							}`}
+						>
 							<input type="checkbox" />
 							<div class="collapse-title font-medium">Material</div>
 							<div class="collapse-content">
 								<div class="border border-stone-300 p-4 rounded">
-									<CollapsibleList items={facets.materials} let:item={material}>
+									{#each facets.materials as material}
 										<div class="form-control">
 											<label class="label justify-start">
 												<input
@@ -328,18 +402,25 @@
 													id={`material-${material.id}`}
 													type="checkbox"
 													name="materials"
-													value={material.id}
+													value={material.id.toString()}
+													bind:group={materials}
 												/>
 												<span class="label-text ml-4"
 													>{material.description || material.xml_id}</span
 												>
 											</label>
 										</div>
-									</CollapsibleList>
+									{/each}
 								</div>
 							</div>
 						</div>
-						<button class="btn btn-primary mt-8 rounded-none w-full">Search</button>
+						<div class="flex justify-between">
+							<button class="btn btn-primary mt-8 rounded-none w-1/2" type="submit">Search</button>
+							<button
+								class="btn btn-secondary mt-8 rounded-none w-1/2"
+								on:click|preventDefault={reset}>Reset</button
+							>
+						</div>
 					</div>
 				</div>
 			</form>

@@ -7,30 +7,29 @@
 	export let currentPage: number = 1;
 	export let totalPages: number = 1;
 
-    function formatDate(inscription: Inscription) {
-        if (inscription.not_before === inscription.not_after) {
-            return parseDate(inscription.not_before);
-        }
+	function formatDate(inscription: Inscription) {
+		if (inscription.not_before === inscription.not_after) {
+			return parseDate(inscription.not_before);
+		}
 
+		return `Between ${parseDate(inscription.not_before)} and ${parseDate(inscription.not_after)}`;
+	}
 
-        return `Between ${parseDate(inscription.not_before)} and ${parseDate(inscription.not_after)}`
-    }
-
-    function getEditionOfType(editions: Edition[], type: string) {
-        if (editions.length === 0) {
+	function getEditionOfType(editions: Edition[], type: string) {
+		if (editions.length === 0) {
 			return 'Not found';
 		}
 
 		const edition = editions.find((edition) => edition.edition_type === type);
 
 		return edition?.text || 'Not found';
-    }
+	}
 
 	function getTranscription(inscription: Inscription) {
 		return getEditionOfType(inscription.editions || [], 'transcription');
 	}
 
-    function getTranslation(inscription: Inscription) {
+	function getTranslation(inscription: Inscription) {
 		return getEditionOfType(inscription.editions || [], 'translation');
 	}
 
@@ -68,20 +67,22 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each inscriptions as inscription (inscription.id)}
-				<tr>
-					<td class="w-24 h-24"><SearchResultImage {inscription} /></td>
-					<td
-						><a href={`/inscriptions/${inscription.filename.replace('.xml', '')}`}>
-							{inscription.title}
-						</a>
-					</td>
-					<td>{(inscription.languages || []).map((language) => language.label).join(', ')}</td>
-					<td>{formatDate(inscription)}</td>
-					<td>{getTranscription(inscription)}</td>
-					<td>{getTranslation(inscription)}</td>
-				</tr>
-			{/each}
+			{#if inscriptions && inscriptions.length > 0}
+				{#each inscriptions as inscription (inscription.id)}
+					<tr>
+						<td class="w-24 h-24"><SearchResultImage {inscription} /></td>
+						<td
+							><a href={`/inscriptions/${inscription.filename.replace('.xml', '')}`}>
+								{inscription.title}
+							</a>
+						</td>
+						<td>{(inscription.languages || []).map((language) => language.label).join(', ')}</td>
+						<td>{formatDate(inscription)}</td>
+						<td>{getTranscription(inscription)}</td>
+						<td>{getTranslation(inscription)}</td>
+					</tr>
+				{/each}
+			{/if}
 		</tbody>
 	</table>
 	<nav class="flex items-center justify-between border-t border-gray-200 px-4 sm:px-0">
