@@ -2,17 +2,16 @@
 	import type { Inscription } from '$lib/types/inscription.type';
 	import type { MapLayerMouseEvent } from 'mapbox-gl';
 
+	import { PUBLIC_MAPBOX_ACCESS_TOKEN } from '$env/static/public';
 	import mapboxgl from 'mapbox-gl';
 	import { onDestroy, onMount } from 'svelte';
 	import MapOverlays from './MapOverlays.svelte';
 
-	const ACCESS_TOKEN =
-		'pk.eyJ1IjoiZGs1OCIsImEiOiJjajQ4aHd2MXMwaTE0MndsYzZwaG1sdmszIn0.VFRnx3NR9gUFBKBWNhhdjw';
 	const ATTRIBUTION =
 		'Map data &copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://mapbox.com">Mapbox</a>';
 	const MAX_ZOOM = 11;
 
-	mapboxgl.accessToken = ACCESS_TOKEN;
+	mapboxgl.accessToken = PUBLIC_MAPBOX_ACCESS_TOKEN;
 
 	export let inscriptions: Inscription[] = [];
 
@@ -50,7 +49,7 @@
 					<article class="prose prose-stone prose-sm">
 						<h3>${properties.title}</h3>
 						<p>
-							${properties.description}
+							${properties.description || ''}
 						</p>
 						<p>
 							<a href="/inscriptions/${properties.filename.replace('.xml', '')}">View</a>
@@ -141,26 +140,6 @@
 		});
 	}
 
-	function removeLayers(map: mapboxgl.Map) {
-		if (map.getLayer(CLUSTER_LAYER)) {
-			map.removeLayer(CLUSTER_LAYER);
-		}
-
-		if (map.getLayer(CLUSTER_COUNT_LAYER)) {
-			map.removeLayer(CLUSTER_LAYER);
-		}
-
-		if (map.getLayer(UNCLUSTERED_LAYER)) {
-			map.removeLayer(UNCLUSTERED_LAYER);
-		}
-	}
-
-	function removeSources(map: mapboxgl.Map) {
-		if (map.getSource(SOURCE_NAME)) {
-			map.removeSource(SOURCE_NAME);
-		}
-	}
-
 	function convertToGeoJson(inscriptions: Inscription[]) {
 		return inscriptions.filter(hasCoords).map((inscription) => {
 			const coordinates = inscription.location_coordinates as number[];
@@ -169,12 +148,11 @@
 				properties: inscription,
 				geometry: {
 					type: 'Point',
-					coordinates: [coordinates[1], coordinates[0]]
+					coordinates
 				}
 			};
 		});
 	}
-
 
 	function formatData(inscriptions: Inscription[]) {
 		return {
@@ -193,7 +171,6 @@
 		map.on('load', () => {
 			addSource(map, inscriptions);
 			addClusterLayers(map);
-			// addOverlays(map);
 		});
 	});
 

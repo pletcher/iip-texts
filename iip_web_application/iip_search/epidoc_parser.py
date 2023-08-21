@@ -359,10 +359,13 @@ class EpidocParser:
 
         if len(geo) > 0:
             try:
-                coords = [float(s) for s in geo[0].strip().split(",")]
+                # the location coordinates are listed as lat,lng
+                # in the EpiDoc files, but Mapbox requires lng,lat pairs.
+                coords = [float(s) for s in geo[0].strip().split(",")].reverse()
             except ValueError:
                 logging.error(f"Incorrect geo coordinates: {geo[0]}.")
-                coords = [0, 0]
+
+                return None
 
             return coords
 

@@ -42,7 +42,7 @@
 </script>
 
 <div class="flex">
-	<div class="flex w-96 flex-col h-full">
+	<div class="flex w-96 flex-col h-full z-50">
 		<div class="flex grow flex-col gap-y-5 bg-secondary px-6 py-4">
 			<form class="min-w-full" data-sveltekit-keepfocus>
 				<div>

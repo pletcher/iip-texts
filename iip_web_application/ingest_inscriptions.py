@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 
+import json
 import logging
 import os
+import requests
+import time
 
 from datetime import datetime
 from pathlib import Path
 
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
 from iip_search import db
@@ -14,8 +18,41 @@ from iip_search.epidoc_parser import EpidocParser
 
 logging.basicConfig(format="%(levelname)s: %(asctime)s %(message)s", level=logging.INFO)
 
+PLEIADES_CACHE_DIR = "./pleiades_cache"
 
-# FIXME: Make sure many-to-many relationships are ingested correctly
+
+def get_location_coordinates_from_pleiades(ref):
+    # the ref_id should be the integer at the end
+    # of the URL, e.g., for https://pleiades.stoa.org/places/687927
+    # it is 687927. Unfortunately, encoders sometimes add
+    # extra spaces (as happened in khja0001.xml), so we're
+    # defensively calling strip() to eliminate them
+    # before creating the filepath.
+    ref = ref.strip()
+    ref_id = ref.split("/")[-1]
+    filepath = f"{PLEIADES_CACHE_DIR}/{ref_id}.json"
+
+    if os.path.isfile(filepath):
+        with open(filepath) as f:
+            data = json.loads(f.read())
+    else:
+        logging.info(f"No cached version of {ref} found.")
+        r = requests.get(f"{ref}/json")
+        data = r.json()
+
+        f = open(filepath, "x")
+        f.write(json.dumps(data, indent=2))
+        f.close()
+        # adding a sleep function here to be kind
+        # to the Pleiades servers
+        time.sleep(0.5)
+
+    representative_location = data.get("reprPoint")
+
+    if representative_location is None:
+        logging.warning(f"No representative location found for {ref}.")
+
+    return representative_location
 
 
 def main(session):
@@ -71,13 +108,22 @@ def main(session):
         else:
             logging.warning(f"No region for {file}!")
 
-        inscription = get_or_create_inscription(
+        if (
+            location_coordinates == None
+            and city is not None
+            and city.pleiades_ref is not None
+        ):
+            location_coordinates = get_location_coordinates_from_pleiades(
+                city.pleiades_ref
+            )
+
+        inscription = upsert_inscription(
             session,
-            file,
             **dict(
                 city_id=city.id if city else None,
                 description=description_raw,
                 dimensions={"dimensions": dimensions_raw},
+                filename=file,
                 iip_preservation_id=iip_preservation.id if iip_preservation else None,
                 location_coordinates=location_coordinates,
                 location_metadata=location_metadata,
@@ -246,31 +292,33 @@ def upsert_edition(session, **kwargs):
 
 
 def get_or_create_iip_writing(session, **kwargs):
-    xml_id = kwargs.pop("xml_id")
-
-    instance = session.query(models.IIPWriting).filter_by(xml_id=xml_id).one_or_none()
-
-    if instance:
-        return instance
-    else:
-        instance = models.IIPWriting(xml_id=xml_id, **kwargs)
-        session.add(instance)
-        session.commit()
-        return instance
-
-
-def get_or_create_inscription(session, filename, **kwargs):
-    instance = (
-        session.query(models.Inscription).filter_by(filename=filename).one_or_none()
+    stmt = (
+        insert(models.IIPWriting)
+        .values(kwargs)
+        .on_conflict_do_update(
+            index_elements=[models.IIPWriting.xml_id], set_=dict(kwargs)
+        )
+        .returning(models.IIPWriting.id)
     )
 
-    if instance:
-        return instance
-    else:
-        instance = models.Inscription(filename=filename, **kwargs)
-        session.add(instance)
-        session.commit()
-        return instance
+    result = session.execute(stmt)
+
+    return session.get(models.IIPWriting, result.scalar_one())
+
+
+def upsert_inscription(session, **kwargs):
+    stmt = (
+        insert(models.Inscription)
+        .values(kwargs)
+        .on_conflict_do_update(
+            index_elements=[models.Inscription.filename], set_=dict(kwargs)
+        )
+        .returning(models.Inscription.id)
+    )
+
+    result = session.execute(stmt)
+
+    return session.get(models.Inscription, result.scalar_one())
 
 
 def list_directory_xml(directory):
