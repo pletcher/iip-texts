@@ -146,7 +146,7 @@
 	}
 </script>
 
-<div class="absolute right-6 bottom-10 bg-opacity-60 opacity-95 bg-stone-700 p-4 rounded-md">
+<div class="fixed right-6 bottom-10 bg-opacity-60 opacity-95 bg-stone-700 p-4 rounded-md">
 	<form>
 		{#each OVERLAY_IDS as key}
 			<div class="form-control">

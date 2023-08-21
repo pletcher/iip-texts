@@ -146,7 +146,7 @@ class Inscription(InscriptionListResponse):
     iip_forms: List[IIPForm]
     iip_genres: List[IIPGenre]
     iip_materials: List[IIPMaterial]
-    iip_preservation: IIPPreservation
+    iip_preservation: Optional[IIPPreservation]
     iip_religions: List[IIPReligion]
     iip_writings: List[IIPWriting]
     provenance: Optional[Provenance]

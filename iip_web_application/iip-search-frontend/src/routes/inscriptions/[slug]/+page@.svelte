@@ -1,8 +1,8 @@
 <script>
-    import '../../../app.css';
+	import '../../../app.css';
 	export let data;
 
-    $: inscription = data.inscription;
+	$: inscription = data.inscription;
 </script>
 
 <div id="single_inscription" class="my-32">
@@ -11,23 +11,23 @@
 			<div class="flex flex-col w-2/3 px-16">
 				<h1 class="font-sans text-2xl mb-4">
 					{inscription.filename}
-					{inscription.short_description}
+					{inscription.short_description || ''}
 				</h1>
 
 				{#each inscription.editions as edition}
 					<div class="pb-8">
-						<h2 class="font-sans_bold uppercase text-xs text-gray-500"
-							>Diplomatic <a
+						<h2 class="font-sans_bold uppercase prose prose-sm prose-stone-500">
+							{edition.edition_type.replace('_', ' ')} <a
 								href="#bibliography"
-								class="underline hover:no-underline text-xs capitalize text-gray-400 ml-1 font-sans"
+								class="underline hover:no-underline prose prose-sm capitalize prose-stone-400 ml-1 font-sans"
 								>Source</a
-							></h2
-						>
-						<p class="font-serif text-3xl">
+							>
+						</h2>
+						<p class="font-serif prose-3xl">
 							{#if edition.text}
 								{edition.text}
 							{:else}
-								<span class="font-sans text-lg text-gray-500">No diplomatic</span>
+								<span class="font-sans text-lg text-gray-500">No {edition.edition_type.replace('_', ' ')}</span>
 							{/if}
 						</p>
 					</div>
@@ -60,7 +60,7 @@
 		</div>
 
 		<div class="w-full mt-4 px-16">
-			<p class="max-w-prose">
+			<p class="prose prose-stone max-w-prose">
 				{inscription.description}
 			</p>
 		</div>
@@ -71,26 +71,16 @@
 				style="background:#e0e0e0;"
 			>
 				<div class="flex flex-col w-1/4">
-					<!-- {% if i.language_display|length > 0 and i.language|length > 0 %}s{% endif %}: -->
 					<h2 class="font-sans_bold uppercase text-xs text-gray-500">Languages</h2>
 
-					<!-- <p>
-              {% if i.language_display %}
-              {% for l in i.language_display %}
-              {{l}}
-              {% if not forloop.last %},&nbsp;
-              {% endif %}
-              {% endfor %}
-              {% elif i.language %}
-              {% for l in i.language %}
-              {{l}}
-              {% if not forloop.last %},&nbsp;
-              {% endif %}
-              {% endfor %}}
-              {% else %}
-              Not Available
-              {% endif %}
-            </p> -->
+					{#if inscription.languages.length > 0}
+						<!-- {% if i.language_display|length > 0 and i.language|length > 0 %}s{% endif %}: -->
+						{#each inscription.languages as language}
+							<p class="prose prose-sm prose-stone">{language.label}</p>
+						{/each}
+					{:else}
+						<p class="prose prose-sm prose-stone">Language information not available</p>
+					{/if}
 				</div>
 
 				<div class="flex flex-col w-1/4">
@@ -172,13 +162,13 @@
 
 					<div id="bibliography">
 						<div class="flex flex-col mb-4">
-							<h2 class="font-sans_bold uppercase text-xs text-gray-500"
-								>Source of Diplomatic <a
+							<h2 class="font-sans_bold uppercase text-xs text-gray-500">
+								Source of Diplomatic <a
 									href="#bibliography"
 									class="underline hover:no-underline text-xs capitalize text-gray-400 ml-1 font-sans"
 									>Zotero</a
-								></h2
-							>
+								>
+							</h2>
 							<p>
 								<!-- {% if biblDiplomatic %}
                 <span id="diplomatic" class="" bibl='{{biblDiplomatic.0}}' ntype='{{biblDiplomatic.1}}' n='{{biblDiplomatic.2}}'>{{biblDiplomatic}}</span>
@@ -192,13 +182,13 @@
 
 						<!-- HIDE IF NO FULL BIBLIOGRAPHY-->
 						<div class="flex flex-col mb-4">
-							<h2 class="font-sans_bold uppercase text-xs text-gray-500"
-								>Bibliography <a
+							<h2 class="font-sans_bold uppercase text-xs text-gray-500">
+								Bibliography <a
 									href="#bibliography"
 									class="underline hover:no-underline text-xs capitalize text-gray-400 ml-1 font-sans"
 									>Zotero</a
-								></h2
-							>
+								>
+							</h2>
 							<p>
 								<!-- <ol id="" class='' style="{% if not biblioFull %}display: none;{% endif %}"> -->
 

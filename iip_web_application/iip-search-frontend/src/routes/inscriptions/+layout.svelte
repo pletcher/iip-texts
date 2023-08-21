@@ -12,10 +12,10 @@
 	$: genres = searchParams.getAll('genres');
 	$: languages = searchParams.getAll('languages');
 	$: materials = searchParams.getAll('materials');
-	$: notAfter = searchParams.get('not_after') || 2023;
-	$: notAfterEra = searchParams.get('not_after_era');
-	$: notBefore = searchParams.get('not_before') || -2000;
-	$: notBeforeEra = searchParams.get('not_before_era');
+	$: notAfter = searchParams.get('not_after');
+	$: notAfterEra = searchParams.get('not_after_era') || 'bce';
+	$: notBefore = searchParams.get('not_before');
+	$: notBeforeEra = searchParams.get('not_before_era') || 'bce';
 	$: physicalTypes = searchParams.getAll('physical_types');
 	$: provenances = searchParams.getAll('provenances');
 	$: regions = searchParams.getAll('regions');
@@ -29,9 +29,9 @@
 		genres = [];
 		languages = [];
 		materials = [];
-		notAfter = 500;
-		notAfterEra = 'ce';
-		notBefore = 2000;
+		notAfter = null;
+		notAfterEra = 'bce';
+		notBefore = null;
 		notBeforeEra = 'bce';
 		physicalTypes = [];
 		provenances = [];
@@ -44,7 +44,7 @@
 <div class="flex">
 	<div class="flex w-96 flex-col h-full">
 		<div class="flex grow flex-col gap-y-5 bg-secondary px-6 py-4">
-			<form class="min-w-full" action="/inscriptions" data-sveltekit-keepfocus>
+			<form class="min-w-full" data-sveltekit-keepfocus>
 				<div>
 					<div class="border-gray-900/10 pb-6">
 						<h2 class="font-semibold underline leading-7 hover:text-neutral-500">
@@ -362,7 +362,7 @@
 							<input type="checkbox" />
 							<div class="collapse-title font-medium">Religion</div>
 							<div class="collapse-content">
-								<div class="border border-stone-300 p-4 rounded">
+								<div class="border border-stone-300 p-4 rounded max-h-48 overflow-y-auto">
 									{#each facets.religions as religion}
 										<div class="form-control">
 											<label class="label justify-start">
@@ -393,7 +393,7 @@
 							<input type="checkbox" />
 							<div class="collapse-title font-medium">Material</div>
 							<div class="collapse-content">
-								<div class="border border-stone-300 p-4 rounded">
+								<div class="border border-stone-300 p-4 rounded max-h-48 overflow-y-auto">
 									{#each facets.materials as material}
 										<div class="form-control">
 											<label class="label justify-start">
@@ -418,6 +418,7 @@
 							<button class="btn btn-primary mt-8 rounded-none w-1/2" type="submit">Search</button>
 							<button
 								class="btn btn-secondary mt-8 rounded-none w-1/2"
+								type="reset"
 								on:click|preventDefault={reset}>Reset</button
 							>
 						</div>

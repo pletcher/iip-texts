@@ -209,65 +209,10 @@
 			map.getSource(SOURCE_NAME).setData(formatData(inscriptions));
 		}
 	}
-
-	/* borrowed from iip-production/iip_smr_web_app/static/iip_search_app/mapsearch/mapsearch.js
-	// OVERLAYS
-
-var roman_provinces;
-var roman_roads;
-var byzantine_provinces_400CE;
-var iip_regions;
-var king_herod_boundaries_37BCE;
-
-// ajax call for getting overlay data
-$.ajax({
-  dataType: "json",
-  url: "load_layers",
-  success: function (data) {
-
-    var provinces = JSON.parse(data.roman_provinces);
-    roman_provinces = new L.geoJSON(provinces, { color: 'olive', weight: 1, onEachFeature: onEachRomanProvince });
-
-    var roads = JSON.parse(data.roman_roads);
-    roman_roads = new L.geoJSON(roads, { style: getWeight });
-
-    var byzantine = JSON.parse(data.byzantine_provinces_400CE);
-    byzantine_provinces_400CE = new L.geoJSON(byzantine, { color: 'gray', weight: 1, onEachFeature: onEachByzantine });
-
-    var iip = JSON.parse(data.iip_regions);
-    iip_regions = new L.geoJSON(iip, { color: 'navy', weight: 1, onEachFeature: onEachIIP });
-
-    var king_herod = JSON.parse(data.king_herod);
-    king_herod_boundaries_37BCE = new L.geoJSON(king_herod, { color: 'brown', weight: 1, onEachFeature: onEachKingHerod });
-  }
-});
-
-
-// FUNCTION FOR CHANGING ROAD WEIGHTS
-var getWeight = function (road) {
-  var line_weight;
-  var dash_array;
-  var color;
-
-  if (road.properties.Major_or_M === "0") {
-    line_weight = 1;
-  } else {
-    line_weight = 2;
-  }
-
-  if (road.properties.Known_or_a) {
-    dash_array = null;
-  } else {
-    dash_array = '1 5';
-  }
-
-  return { weight: line_weight, dashArray: dash_array, color: 'maroon' }
-}
-	*/
 </script>
 
-<div>
-	<div class="fixed bottom-0 right-0 h-full w-full left-96 bg-theme-700 text-white" bind:this={mapContainer} />
+<div class="flex w-full h-full">
+	<div class="absolute h-screen w-3/4 top-24 right-0 bg-theme-700 text-white" bind:this={mapContainer} />
 	{#if map}
 		<MapOverlays map={map} />
 	{/if}
