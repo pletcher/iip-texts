@@ -158,6 +158,19 @@ class EpidocParser:
 
         return dimensions
 
+    def get_figures(self):
+        figures = []
+        for figure in self.tree.iterfind(
+            "//tei:physDesc/tei:decoDesc/tei:decoNote", namespaces=NAMESPACES
+        ):
+            name = figure.xpath("./tei:ab/text()", namespaces=NAMESPACES)
+            locus = figure.xpath("./tei:locus/text()", namespaces=NAMESPACES)
+
+            if len(name) > 0 and len(locus) > 0:
+                return figures.append(dict(name=name[0], locus=locus[0]))
+
+        return figures
+
     def get_iip_forms(self):
         object_description = self.tree.find(
             self.iip_form_description_xpath, namespaces=NAMESPACES

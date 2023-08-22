@@ -135,6 +135,13 @@ class Region(Base):
     )
 
 
+figure_inscription = Table(
+    "figure_inscription",
+    Base.metadata,
+    Column("figure_id", ForeignKey("figures.id"), primary_key=True),
+    Column("inscription_id", ForeignKey("inscriptions.id"), primary_key=True),
+)
+
 iip_form_inscription = Table(
     "iip_form_inscription",
     Base.metadata,
@@ -224,6 +231,47 @@ class BibliographicEntry(Base):
         Computed(
             """
     to_tsvector('english', coalesce(ptr_target, ''))
+    """
+        ),
+    )
+
+
+"""
+  <xsl:template name="figure">
+    <xsl:for-each select="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:physDesc/tei:decoDesc/tei:decoNote">
+      <xsl:variable name="desc" select="tei:ab/normalize-space()"/>
+      <xsl:variable name="loc" select="tei:locus/normalize-space()"/>
+      <xsl:if test="$desc!= ''">
+        <xsl:element name="field">
+          <xsl:attribute name="name">figure_desc</xsl:attribute>
+          <xsl:value-of select="$desc"/>
+        </xsl:element>
+      </xsl:if>
+      <xsl:if test="$loc != ''">
+        <xsl:element name="field">
+          <xsl:attribute name="name">figure</xsl:attribute>
+          <xsl:value-of select="translate($desc, '#', '')"/> (<xsl:value-of select="$loc"/>)</xsl:element>
+      </xsl:if>
+    </xsl:for-each>
+  </xsl:template>
+"""
+
+
+class Figure(Base):
+    __tablename__ = "figures"
+    __table_args__ = (UniqueConstraint("name", name="figure_name"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    inscriptions: Mapped[Set["Inscription"]] = relationship(
+        back_populates="figures", secondary=figure_inscription
+    )
+    # the name field corresponds to the text value of the <ab> tags
+    name: Mapped[str] = mapped_column(Text)
+    locus: Mapped[Optional[str]] = mapped_column(Text)
+    searchable_text = mapped_column(
+        TSVector,
+        Computed(
+            """
+    to_tsvector('english', coalesce(locus, '') || coalesce(name, ''))
     """
         ),
     )
@@ -367,6 +415,9 @@ class Inscription(Base):
         nullable=False, default=DisplayStatus.APPROVED
     )
     editions: Mapped[Set["Edition"]] = relationship(back_populates="inscription")
+    figures: Mapped[Set[Figure]] = relationship(
+        secondary=figure_inscription, back_populates="inscriptions"
+    )
     filename: Mapped[str] = mapped_column(nullable=False, unique=True)
     iip_forms: Mapped[Set[IIPForm]] = relationship(
         secondary=iip_form_inscription, back_populates="inscriptions"

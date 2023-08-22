@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Inscription } from '$lib/types/inscription.type';
-	import type { LngLatLike, MapLayerMouseEvent } from 'mapbox-gl';
+	import type { LngLatLike } from 'mapbox-gl';
 
 	import { PUBLIC_MAPBOX_ACCESS_TOKEN } from '$env/static/public';
 	import mapboxgl from 'mapbox-gl';
@@ -19,7 +19,7 @@
 	function initializeMap() {
 		const map = new mapboxgl.Map({
 			customAttribution: ATTRIBUTION,
-			logoPosition: 'bottom-right',
+			logoPosition: 'bottom-left',
 			container: mapContainer,
 			style: 'mapbox://styles/mapbox/satellite-v9',
 			center: inscription.location_coordinates as LngLatLike,
@@ -29,12 +29,17 @@
 		return map;
 	}
 
+    function addMarker(map: mapboxgl.Map, inscription: Inscription) {
+        const marker = new mapboxgl.Marker().setLngLat(inscription.location_coordinates as LngLatLike);
+
+        marker.addTo(map);
+    }
+
     onMount(async () => {
 		map = initializeMap();
 
 		map.on('load', () => {
-			addSource(map, inscriptions);
-			addClusterLayers(map);
+            addMarker(map, inscription);
 		});
 	});
 
@@ -44,3 +49,5 @@
 		}
 	});
 </script>
+
+<div class="h-full w-full" bind:this={mapContainer} />

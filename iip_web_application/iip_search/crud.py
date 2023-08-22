@@ -1,5 +1,6 @@
 from typing import Literal
 
+from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 from iip_search import models
 
@@ -128,29 +129,64 @@ def list_inscriptions(
         .distinct(models.Inscription.id)
     )
 
+    ands = []
+    ors = []
+
+    if text_search is not None:
+        ors.append(
+            models.Inscription.editions.any(
+                models.Edition.searchable_text.match(text_search)
+            )
+        )
+
+    if description_place_id is not None:
+        ors.append(models.Inscription.searchable_text.match(description_place_id))
+
+    if figures is not None:
+        ors.append(
+            models.Inscription.figures.any(
+                models.Figure.searchable_text.match(text_search)
+            )
+        )
+
     if not_before is not None and not_before != "":
         if not_before_era == "bce":
             not_before = -int(not_before)
-        query = query.filter(models.Inscription.not_before >= not_before)
+        ands.append(models.Inscription.not_before >= not_before)
 
     if not_after is not None and not_after != "":
         if not_after_era == "bce":
             not_after = -int(not_after)
-        query = query.filter(models.Inscription.not_after <= not_after)
+        ands.append(models.Inscription.not_after <= not_after)
 
     if cities is not None and len(cities) > 0:
-        query = query.filter(models.Inscription.city_id.in_(cities))
+        ands.append(models.Inscription.city_id.in_(cities))
 
     if provenances is not None and len(provenances) > 0:
-        query = query.filter(models.Inscription.provenance_id.in_(provenances))
+        ands.append(models.Inscription.provenance_id.in_(provenances))
 
-    # if len(genres) > 0:
-    #     query = query.filter(models.Inscription.iip_genres)
+    if genres is not None and len(genres) > 0:
+        ands.append(models.Inscription.iip_genres.any(models.IIPGenre.id.in_(genres)))
 
-    # if len(physical_types) > 0:
-    #     query = query.filter(models.Inscription.iip_forms)
+    if physical_types is not None and len(physical_types) > 0:
+        ands.append(
+            models.Inscripton.iip_forms.any(models.IIPForm.id.in_(physical_types))
+        )
 
-    return query
+    if languages is not None and len(languages) > 0:
+        ands.append(models.Inscription.languages.any(models.Language.id.in_(languages)))
+
+    if religions is not None and len(religions) > 0:
+        ands.append(
+            models.Inscription.iip_religions.any(models.IIPReligion.id.in_(religions))
+        )
+
+    if materials is not None and len(materials) > 0:
+        ands.append(
+            models.Inscription.iip_materials.any(models.IIPMaterial.id.in_(materials))
+        )
+
+    return query.filter(or_(*ors)).filter(and_(*ands))
 
 
 def remove_accents(input_str):

@@ -57,6 +57,12 @@ class BibliographicEntry(IIPBase):
     xml_id: str
 
 
+class Figure(IIPBase):
+    id: int
+    name: str
+    locus: str
+
+
 class IIPForm(IIPBase):
     id: int
     ana: Optional[str]
@@ -143,6 +149,7 @@ class InscriptionListResponse(InscriptionMapResponse):
 # This schema should only be used for displaying an individual inscription.
 class Inscription(InscriptionListResponse):
     bibliographic_entries: List[BibliographicEntry]
+    figures: List[Figure]
     iip_forms: List[IIPForm]
     iip_genres: List[IIPGenre]
     iip_materials: List[IIPMaterial]

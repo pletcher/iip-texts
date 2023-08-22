@@ -30,6 +30,12 @@ def get_location_coordinates_from_pleiades(ref):
     # before creating the filepath.
     ref = ref.strip()
     ref_id = ref.split("/")[-1]
+
+    # allow for one trailing slash --- although this should
+    # be considered a mistake
+    if ref_id == "":
+        ref_id = ref.split("/")[-2]
+
     filepath = f"{PLEIADES_CACHE_DIR}/{ref_id}.json"
 
     if os.path.isfile(filepath):
@@ -65,6 +71,7 @@ def main(session):
         city_raw = parser.get_city()
         description_raw = parser.get_description()
         dimensions_raw = parser.get_dimensions()
+        figures_raw = parser.get_figures()
         iip_forms_raw = parser.get_iip_forms()
         iip_genres_raw = parser.get_iip_genres()
         iip_materials_raw = parser.get_iip_materials()
@@ -144,6 +151,15 @@ def main(session):
 
         for entry in bibliographic_entries:
             inscription.bibliographic_entries.add(entry)
+
+        figures = []
+        if figures_raw is not None:
+            figures = [
+                get_or_create(session, models.Figure, **raw) for raw in figures_raw
+            ]
+
+        for figure in figures:
+            inscription.figures.add(figure)
 
         iip_forms = []
         if iip_forms_raw is not None:

@@ -1,273 +1,237 @@
-<script>
+<script lang="ts">
+	import type { Inscription } from '$lib/types/inscription.type';
 	import '../../../app.css';
+	import Maplet from '$lib/components/Maplet.svelte';
 	export let data;
 
 	$: inscription = data.inscription;
+
+	function getEdition(inscription: Inscription, editionType: string) {
+		const edition = inscription.editions?.find((edition) => edition.edition_type === editionType);
+
+		if (edition && Boolean(edition.text)) {
+			return edition.text;
+		}
+
+		return `No ${editionType.replace('_', '')}`;
+	}
 </script>
 
-<div id="single_inscription" class="my-32">
-	<div class="w-full px-16 max-w-7xl mx-auto">
-		<div class="w-full flex flex-nowrap">
-			<div class="flex flex-col w-2/3 px-16">
-				<h1 class="font-sans text-2xl mb-4">
-					{inscription.filename}
-					{inscription.short_description || ''}
-				</h1>
-
-				{#each inscription.editions as edition}
-					<div class="pb-8">
-						<h2 class="font-sans_bold uppercase prose prose-sm prose-stone-500">
-							{edition.edition_type.replace('_', ' ')} <a
-								href="#bibliography"
-								class="underline hover:no-underline prose prose-sm capitalize prose-stone-400 ml-1 font-sans"
-								>Source</a
-							>
-						</h2>
-						<p class="font-serif prose-3xl">
-							{#if edition.text}
-								{edition.text}
-							{:else}
-								<span class="font-sans text-lg text-gray-500">No {edition.edition_type.replace('_', ' ')}</span>
-							{/if}
-						</p>
-					</div>
-				{/each}
-			</div>
-			<!-- IMAGES -->
-			<!-- <div class="w-1/3">
-          {% for filename, caption in image_dict.items %}
-          <a href="{{image_url_base}}{{filename}}" class="block w-full cursor-zoom-in opacity-100 hover:opacity-80 transition-opacity" onclick="return hs.expand(this)" title="{{caption}}">
-            <img width="w-full object-contain " style="max-height:66vh" src="{{image_url_base}}{{filename}}" alt="Highslide JS" title="Click to enlarge">
-            <br />
-            {{caption}}
-          </a>
-          {% empty %}
-          <img src='{% static "/resources/img/noimg.png" %}' style="width: 150px;">
-          {% endfor %}
-
-          {% if image_caption %}
-          <div class="">{{ image_caption }}</div>
-          {% endif %}
-
-          {% if i.image %}
-          <p class="">
-            {% for thumb in i.image %}
-            <a href="/django_z_media/iip_z_media/inscription_images/display_size/{{thumb}}.jpg"><img onerror="ImgError(this)" src="/django_z_media/iip_z_media/inscription_images/thumbnails/{{thumb}}_t.jpg" /></a><br />
-            {% endfor %}
-          </p>
-          {% endif %}
-        </div> -->
-		</div>
-
-		<div class="w-full mt-4 px-16">
-			<p class="prose prose-stone max-w-prose">
-				{inscription.description}
-			</p>
-		</div>
-
-		<div class="w-full">
+<div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+	<div
+		class="mx-auto grid max-w-2xl grid-cols-1 grid-rows-1 items-start gap-x-8 gap-y-8 lg:mx-0 lg:max-w-none lg:grid-cols-3"
+	>
+		<!-- Maplet -->
+		<div class="lg:col-start-3 lg:row-end-1">
+			<h2 class="sr-only">Location</h2>
 			<div
-				class="max-w-7 py-10 px-16 my-8 mx-auto flex flex-nowrap justify-around items-center"
-				style="background:#e0e0e0;"
+				class="rounded-lg bg-gray-50 shadow-sm ring-1 ring-gray-900/5 min-h-64 min-w-64 h-64 min-w-64 w-full"
 			>
-				<div class="flex flex-col w-1/4">
-					<h2 class="font-sans_bold uppercase text-xs text-gray-500">Languages</h2>
+				<Maplet {inscription} />
+			</div>
+		</div>
 
-					{#if inscription.languages.length > 0}
-						<!-- {% if i.language_display|length > 0 and i.language|length > 0 %}s{% endif %}: -->
-						{#each inscription.languages as language}
-							<p class="prose prose-sm prose-stone">{language.label}</p>
+		<div
+			class="-mx-4 px-4 py-8 shadow-sm ring-1 ring-gray-900/5 sm:mx-0 sm:rounded-lg sm:px-8 sm:pb-14 lg:col-span-2 lg:row-span-2 lg:row-end-2 xl:px-16 xl:pb-20 xl:pt-16"
+		>
+			<h2 class="font-semibold leading-6 prose prose-h2 prose-stone prose-2xl">
+				{inscription.title || inscription.filename}
+			</h2>
+			<dl class="mt-6 grid grid-cols-1 text-sm leading-6 sm:grid-cols-2">
+				<div class="sm:pr-4">
+					<dt class="inline prose prose-stone">Terminus post quem</dt>
+					<dd class="inline prose prose-stone">
+						<time datetime={inscription.not_before}
+							>{Math.abs(inscription.not_before)} {inscription.not_before < 0 ? 'BCE' : 'CE'}</time
+						>
+					</dd>
+				</div>
+				<div class="mt-2 sm:mt-0 sm:pl-4">
+					<dt class="inline prose prose-stone">Terminus ante quem</dt>
+					<dd class="inline prose prose-stone">
+						<time datetime={inscription.not_after}
+							>{Math.abs(inscription.not_after)} {inscription.not_after < 0 ? 'BCE' : 'CE'}</time
+						>
+					</dd>
+				</div>
+				<div class="mt-6 border-t border-gray-900/5 pt-6 sm:pr-4">
+					<dt class="font-semibold prose prose-stone">Summary</dt>
+					<dd class="mt-2 prose prose-stone">{inscription.description || ''}</dd>
+				</div>
+
+				<div class="mt-6 border-t pt-6 sm:pr-4 w-full">
+					<dt class="font-semibold prose prose-stone">Images</dt>
+					<dd class="mt-2">
+						{#if inscription.images && inscription.images.length > 0}
+							<ul role="list" class="mt-6 space-y-6">
+								{#each inscription.images as image (image.id)}
+									<li class="relative flex gap-x-4">
+										<div
+											class="relative flex h-64 w-64 flex-none items-center justify-center mt-8 bg-white"
+										>
+											<a
+												href={image.graphic_url}
+												class="block w-full cursor-zoom-in opacity-100 hover:opacity-80 transition-opacity"
+												title={image.description || 'An image of the inscription.'}
+											>
+												<img
+													class="w-full object-contain"
+													style="max-height:66vh"
+													src={image.graphic_url}
+													alt={image.description}
+													title="Click to view"
+												/>
+												<p class="caption-bottom prose prose-p prose-stone">
+													{image.description || ''}
+												</p>
+											</a>
+										</div>
+									</li>
+								{/each}
+							</ul>
+						{:else}
+							<img
+								class="w-full object-contain"
+								style="max-height:66vh"
+								src="/img/iip_placeholder.jpg"
+								alt="No images available"
+								title="Click to view"
+							/>
+						{/if}
+					</dd>
+				</div>
+			</dl>
+
+			<table class="mt-16 w-full whitespace-nowrap text-left prose prose-sm leading-6">
+				<colgroup>
+					<col class="w-full" />
+				</colgroup>
+				<thead class="border-b border-gray-200 prose prose-stone">
+					<tr>
+						<th scope="col" class="px-0 py-3 font-semibold" />
+					</tr>
+				</thead>
+				<tbody>
+					<tr class="border-b border-gray-100">
+						<td class="max-w-0 px-0 py-5 align-top font-medium prose prose-stone">
+							<div class="font-medium prose prose-stone">Diplomatic</div>
+							<p class="prose prose-p prose-stone font-normal">
+								{getEdition(inscription, 'diplomatic')}
+							</p>
+						</td>
+					</tr>
+					<tr class="border-b border-gray-100">
+						<td class="max-w-0 px-0 py-5 align-top font-medium prose prose-stone">
+							<div class="font-medium prose prose-stone">Transcription</div>
+							<p class="prose prose-p prose-stone font-normal">
+								{getEdition(inscription, 'transcription')}
+							</p>
+						</td>
+					</tr>
+					<tr class="border-b border-gray-100">
+						<td class="max-w-0 px-0 py-5 align-top font-medium prose prose-stone">
+							<div class="font-medium prose prose-stone">Segmented transcription</div>
+							<p class="prose prose-p prose-stone font-normal">
+								{getEdition(inscription, 'transcription_segmented')}
+							</p>
+						</td>
+					</tr>
+					<tr class="border-b border-gray-100">
+						<td class="max-w-0 px-0 py-5 align-top font-medium prose prose-stone">
+							<div class="font-medium prose prose-stone">Translation</div>
+							<p class="prose prose-p prose-stone font-normal">
+								{getEdition(inscription, 'translation')}
+							</p>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+
+		<div class="lg:col-start-3">
+			<div class="py-3">
+				<h2 class="font-semibold leading-6 prose prose-stone prose-h2 mb-3">Current location</h2>
+				{#if inscription.provenance?.placename}
+					<p class="flex-auto py-0.5 text-xs leading-5 prose prose-stone prose-p">
+						{inscription.provenance.placename}
+					</p>
+				{:else}
+					<p class="flex-auto py-0.5 text-xs leading-5 prose prose-stone prose-p">
+						No provenance provided.
+					</p>
+				{/if}
+			</div>
+			<div class="py-3">
+				<h2 class="font-semibold leading-6 prose prose-stone prose-h2 mb-3">Figures</h2>
+				{#if inscription.figures.length > 0}
+					<ul role="list" class="mt-6 space-y-6">
+						{#each inscription.figures as figure}
+							<li class="relative flex gap-x-4">
+								<p class="flex-auto py-0.5 text-xs leading-5 prose prose-stone prose-p">
+									<span class="font-medium prose prose-stone">{figure.name}</span>
+									{figure.locus}
+								</p>
+							</li>
 						{/each}
-					{:else}
-						<p class="prose prose-sm prose-stone">Language information not available</p>
-					{/if}
-				</div>
-
-				<div class="flex flex-col w-1/4">
-					<h2 class="font-sans_bold uppercase text-xs text-gray-500">Dimensions</h2>
-
-					<p>
-						<!-- {% if i.dimensions %}
-              {{i.dimensions}}
-              {% else %}
-              Not Available
-              {% endif %} -->
+					</ul>
+				{:else}
+					<p class="flex-auto py-0.5 text-xs leading-5 prose prose-stone prose-p">
+						No figures described.
 					</p>
-				</div>
+				{/if}
+			</div>
+			<div class="py-3">
+				<h2 class="font-semibold leading-6 prose prose-stone prose-h2 mb-3">Bibliography</h2>
+				{#if inscription.bibliographic_entries.length > 0}
+					<ul role="list">
+						{#each inscription.bibliographic_entries as bib}
+							<li class="relative flex gap-x-4">
+								<p class="flex-auto text-xs prose prose-stone prose-p">
+									<span class="font-medium prose prose-stone">{bib.ptr_target}</span>
+									{bib.bibl_scope_unit}
+									{bib.bibl_scope}
+								</p>
+							</li>
+						{/each}
+					</ul>
+				{:else}
+					<p class="flex-auto text-xs prose prose-stone prose-p">No bibliography available.</p>
+				{/if}
+			</div>
 
-				<div class="flex flex-col w-1/4">
-					<h2 class="font-sans_bold uppercase text-xs text-gray-500">Date</h2>
+			<div class="py-3 space-y-3">
+				<h2 class="font-semibold leading-6 prose prose-stone prose-h2 mb-3">
+					Cite This Inscription
+				</h2>
 
-					<p>
-						<!-- {% if i.notBefore %}
-              {{i.notBefore|cleanDates}} to {{i.notAfter|cleanDates}}
-              {% else %}
-              Not Available
-              {% endif %} -->
-					</p>
-				</div>
+				<p class="prose prose-p prose-stone">
+					IIP is committed to the idea that the public good is best served by keeping our data free
+					for use and reuse. You can cite and use this inscription under the terms of the Creative
+					Commons Attribution-NonCommercial 4.0 International License. Note also that all images are
+					either in the public domain or used with permission, and unless noted we do not hold
+					copyright to them. For permission to reuse the images, please contact the copyright
+					holder, noted in the illustration credit.
+				</p>
 
-				<!-- MINI MAP -->
+				<p class="prose prose-p prose-stone">
+					The project can be cited as:
+				</p>
 
-				<!-- <script type="text/javascript">
-            var inscription_list = ["{{i.inscription_id}}"];
-          </script>
+				<cite class="prose prose-p prose-stone">
+					Satlow, Michael L., ed. 2002 - . “Inscriptions of
+					Israel/Palestine.” Brown University. <a href="https://doi.org/10.26300/PZ1D-ST89"
+						>https://doi.org/10.26300/PZ1D-ST89</a
+					>
+				</cite>
 
-          <div class="flex flex-col w-1/4">
-            <script src='https://api.mapbox.com/mapbox-gl-js/v0.38.0/mapbox-gl.js'></script>
-            <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js" integrity="sha512-A7vV8IFfih/D732iSSKi20u/ooOfj/AGehOKq0f4vLT1Zr2Y+RX7C+w8A1gaSasGtRUZpF/NZgzSAu4/Gc41Lg==" crossorigin=""></script>
-            <script src="https://code.jquery.com/jquery-1.12.1.min.js"></script>
+				<p class="prose prose-p prose-stone">
+					This inscription can be cited as:
+				</p>
 
-            <script type="text/javascript">
-              var API_URL = "{% url 'api_wrapper' %}";
-            </script> 
-
-            <script type="text/javascript" src='{% static "iip_search_app/js/maplet.js" %}'></script>
-            <div id="maplet{{i.inscription_id}}" class="" style="    width: 100%;
-                height: 120px;
-                display: block;
-                border: 1px solid #aaa;
-                margin-bottom: 10px;"></div>
-
-
-            <h2 class="font-sans_bold uppercase text-xs text-gray-500">Place Found</h2>
-            <p>
-              {% if i.place_found %}
-              {{i.place_found|placeClean}}
-              {% else %}
-              Not Available
-              {% endif %}
-            </p>
-          </div>
-
-        </div> -->
-				<div class="max-w-7xl px-16 my-4 mx-auto">
-					<div class="flex flex-col mb-4">
-						<h2 class="font-sans_bold uppercase text-xs text-gray-500">Current Location</h2>
-						<p>
-							<!-- {% if i.provenance %}
-              {{ i.provenance.0 }}
-              {% else %}
-              Not Available
-              {% endif %} -->
-						</p>
-					</div>
-
-					<div class="flex flex-col mb-4">
-						<h2 class="font-sans_bold uppercase text-xs text-gray-500">Figures</h2>
-						<p>
-							<!-- {% if i.figure %}{% for f in i.figure %}{{f}}<br />{% endfor %}{% else %}Not Available{% endif %}</p> -->
-						</p>
-					</div>
-
-					<div id="bibliography">
-						<div class="flex flex-col mb-4">
-							<h2 class="font-sans_bold uppercase text-xs text-gray-500">
-								Source of Diplomatic <a
-									href="#bibliography"
-									class="underline hover:no-underline text-xs capitalize text-gray-400 ml-1 font-sans"
-									>Zotero</a
-								>
-							</h2>
-							<p>
-								<!-- {% if biblDiplomatic %}
-                <span id="diplomatic" class="" bibl='{{biblDiplomatic.0}}' ntype='{{biblDiplomatic.1}}' n='{{biblDiplomatic.2}}'>{{biblDiplomatic}}</span>
-
-                {% else %}
-                Not available
-                {% endif %} -->
-							</p>
-						</div>
-						<!-- REPEAT ABOVE FOR ALL EDITIONS -->
-
-						<!-- HIDE IF NO FULL BIBLIOGRAPHY-->
-						<div class="flex flex-col mb-4">
-							<h2 class="font-sans_bold uppercase text-xs text-gray-500">
-								Bibliography <a
-									href="#bibliography"
-									class="underline hover:no-underline text-xs capitalize text-gray-400 ml-1 font-sans"
-									>Zotero</a
-								>
-							</h2>
-							<p>
-								<!-- <ol id="" class='' style="{% if not biblioFull %}display: none;{% endif %}"> -->
-
-								<!-- 
-                  {% for bib_id, reference in z_ids.items %}
-
-                  <div class="" style="">
-                    <div>
-
-                      <span style="" class='z_id' bibl='{{bib_id}}'>{{bib_id}}</span>
-                      <span class='ref' style="display:inline; white-space:nowrap; position:relative;">
-                        {% for ntype, n in reference %}
-
-                        {% if ntype == 'insc' %}
-                        insc.
-                        {% elif ntype == 'page' %}
-                        p.
-                        {% else %}
-                        {{ntype}}
-                        {% endif %}
-                        {% if n == reference|last|last %}
-                        {{n}}
-                        {% else %}
-                        {{n}};
-                        {% endif %}
-                        {% endfor %}
-                        )
-                      </span>
-
-                    </div>
-
-                  </div>
-                  {% endfor %}
-
-
-
-                </ol> -->
-							</p>
-							<!--           {% if biblioFull %}
-          <p><span class="short_header"><span style="font-weight: bold;">Bibliography: </span></span>Not Available</p>
-        {% endif %} -->
-						</div>
-
-						<div style="clear:both" />
-
-						<!-- {% if not biblioFull %}<div id="permalink"><a href="../viewinscr/{{i.inscription_id}}/">Link to this inscription</a></div>{% endif %} -->
-
-						<div
-							class="font-sans uppercase underline hover:no-underline text-sm my-4 text-theme-700"
-						>
-							<a href="#XML">View XML</a>
-						</div>
-					</div>
-
-					<!-- TODO: FIX ZOTERO CITATIONS -->
-
-					<h2>Cite This Inscription</h2>
-
-					<p class="pb-2">
-						IIP is committed to the idea that the public good is best served by keeping our data
-						free for use and reuse. You can cite and use this inscription under the terms of the
-						Creative Commons Attribution-NonCommercial 4.0 International License. Note also that all
-						images are either in the public domain or used with permission, and unless noted we do
-						not hold copyright to them. For permission to reuse the images, please contact the
-						copyright holder, noted in the illustration credit.
-					</p>
-
-					<p class="pb-2">
-						The project can be cited as: Satlow, Michael L., ed. 2002 - . “Inscriptions of
-						Israel/Palestine.” Brown University. <a href="https://doi.org/10.26300/PZ1D-ST89"
-							>https://doi.org/10.26300/PZ1D-ST89</a
-						>
-					</p>
-
-					<p class="pb-2">
-						This inscription can be cited as: "Inscriptions of Israel/Palestine," [inscription
-						id],[today's date]. https:doi.org/10.26300/pz1d-st89
-					</p>
-				</div>
+				<cite class="prose prose-p prose-stone">
+					"Inscriptions of Israel/Palestine," [inscription
+					id],[today's date]. https:doi.org/10.26300/pz1d-st89
+				</cite>
 			</div>
 		</div>
 	</div>
