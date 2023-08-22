@@ -93,7 +93,7 @@
 							<img
 								class="w-full object-contain"
 								style="max-height:66vh"
-								src="/img/iip_placeholder.jpg"
+								src="/img/iip_placeholder.png"
 								alt="No images available"
 								title="Click to view"
 							/>
