@@ -29,6 +29,7 @@ target_metadata = models.Base.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
+DB_URL = os.getenv("DB_URL", config.get_main_option("sqlalchemy.url"))
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
@@ -42,9 +43,9 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = os.getenv("DB_URL", config.get_main_option("sqlalchemy.url"))
+    
     context.configure(
-        url=url,
+        url=DB_URL,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
@@ -61,6 +62,8 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
+    config.set_section_option("alembic", "sqlalchemy.url", DB_URL)
+    
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",

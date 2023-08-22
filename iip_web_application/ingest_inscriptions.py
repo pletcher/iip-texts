@@ -18,6 +18,7 @@ from iip_search.epidoc_parser import EpidocParser
 
 logging.basicConfig(format="%(levelname)s: %(asctime)s %(message)s", level=logging.INFO)
 
+EPIDOC_FILES_DIR = os.getenv("EPIDOC_FILES_DIR", "../epidoc-files")
 PLEIADES_CACHE_DIR = "./pleiades_cache"
 
 
@@ -62,10 +63,10 @@ def get_location_coordinates_from_pleiades(ref):
 
 
 def main(session):
-    files = list_directory_xml("../epidoc-files")
+    files = list_directory_xml(EPIDOC_FILES_DIR)
 
     for file in files:
-        parser = EpidocParser(f"../epidoc-files/{file}")
+        parser = EpidocParser(f"{EPIDOC_FILES_DIR}/{file}")
 
         bibliographic_entries_raw = parser.get_bibliography()
         city_raw = parser.get_city()

@@ -4,12 +4,11 @@ import re
 from lxml import etree
 from pathlib import Path
 
-EPIDOC_DIR = Path("../epidoc-files")
 NAMESPACES = {
     "tei": "http://www.tei-c.org/ns/1.0",
     "xml": "http://www.w3.org/XML/1998/namespace",
 }
-TAXONOMY_FILE = Path("../include_taxonomies.xml")
+TAXONOMY_FILE = Path("./include_taxonomies.xml")
 XML_ID_ATTRIB = "{http://www.w3.org/XML/1998/namespace}id"
 XML_LANG_ATTRIB = "{http://www.w3.org/XML/1998/namespace}lang"
 
